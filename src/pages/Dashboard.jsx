@@ -65,6 +65,19 @@ export default function Dashboard({ showToast }) {
     const nextLesson = upcomingLessons[0];
     const nextLessonStudent = nextLesson ? students.find(s => s.id === nextLesson.studentId) : null;
 
+    // Determine if the next lesson is actionable (starts within 10 mins or already started)
+    let isNextLessonActionable = false;
+    if (nextLesson) {
+        if (nextLesson.status === 'started') {
+            isNextLessonActionable = true;
+        } else {
+            const lessonStart = parse(`${nextLesson.date} ${nextLesson.time}`, 'yyyy-MM-dd HH:mm', new Date());
+            const diffMins = differenceInMinutes(lessonStart, new Date());
+            // Active if within 10 mins before start, OR up to 45 mins late (user might remain late)
+            isNextLessonActionable = diffMins <= 10 && diffMins > -45;
+        }
+    }
+
     // Notification state to prevent duplicate alerts
     const [notifiedLessons, setNotifiedLessons] = useState(new Set());
 
@@ -187,8 +200,14 @@ export default function Dashboard({ showToast }) {
                 {/* Smart Next Lesson Card */}
                 {nextLesson && nextLessonStudent ? (
                     <div
-                        onClick={() => handleLessonCardClick(nextLesson)}
-                        className="relative overflow-hidden rounded-2xl shadow-ios-lg p-6 text-white active:scale-98 transition-transform cursor-pointer"
+                        onClick={() => {
+                            if (isNextLessonActionable) {
+                                handleLessonCardClick(nextLesson);
+                            } else {
+                                showToast('Ders saati henüz gelmedi (10 dk kala açılır)', 'error');
+                            }
+                        }}
+                        className={`relative overflow-hidden rounded-2xl shadow-ios-lg p-6 text-white transition-transform cursor-pointer ${isNextLessonActionable ? 'active:scale-98' : 'opacity-90 grayscale-[0.2]'}`}
                     >
                         <div className={`absolute inset-0 bg-gradient-to-br ${nextLesson.status === 'started' ? 'from-green-500 to-emerald-600 animate-pulse' : 'from-ios-blue to-ios-purple'} opacity-90`}></div>
                         <div className="relative z-10">
@@ -214,48 +233,22 @@ export default function Dashboard({ showToast }) {
 
                             <div className="text-2xl font-medium mt-2">{nextLessonStudent.name}</div>
 
-                            {(() => {
-                                // Robust time calculation using date-fns
-                                // nextLesson.date is 'yyyy-MM-dd', time is 'HH:mm'
-                                const lessonStart = parse(`${nextLesson.date} ${nextLesson.time}`, 'yyyy-MM-dd HH:mm', new Date());
-                                const now = new Date();
-                                const diffMins = differenceInMinutes(lessonStart, now);
-
-                                // Show if within 10 mins BEFORE start, and up to 30 mins AFTER start
-                                const isTime = diffMins <= 10 && diffMins > -30;
-
-                                // DEBUG: Remove this line after verifying
-                                console.log('Lesson:', nextLesson.time, 'Now:', now.toLocaleTimeString(), 'Diff:', diffMins);
-
-                                return (
-                                    <>
-                                        {/* DEBUG INFO */}
-                                        <div className="bg-black/80 text-white p-2 rounded text-[10px] mt-2 font-mono">
-                                            Ders: {nextLesson.date} {nextLesson.time}<br />
-                                            Şimdi: {now.toString()}<br />
-                                            Fark: {diffMins.toFixed(2)} dk<br />
-                                            Şart: {diffMins} {"<="} 10 && {diffMins} {">"} -30 ? {isTime ? 'EVET' : 'HAYIR'}
-                                        </div>
-
-                                        {((nextLesson.status === 'upcoming' || nextLesson.status === 'scheduled') && isTime) && (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleLessonCardClick(nextLesson);
-                                                }}
-                                                className="mt-4 w-full bg-white/20 backdrop-blur-md rounded-xl p-3 flex items-center justify-between hover:bg-white/30 transition-colors animate-bounce"
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-3 h-3 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]"></div>
-                                                    <span className="font-bold text-sm">Ders Vakti! Yoklama Al</span>
-                                                </div>
-                                                <span className="bg-white text-ios-blue text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">Başlat →</span>
-                                            </button>
-                                        )}
-                                    </>
-                                );
-                                return null;
-                            })()}
+                            {/* Action Button */}
+                            {isNextLessonActionable && nextLesson.status !== 'started' && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleLessonCardClick(nextLesson);
+                                    }}
+                                    className="mt-4 w-full bg-white/20 backdrop-blur-md rounded-xl p-3 flex items-center justify-between hover:bg-white/30 transition-colors animate-bounce"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]"></div>
+                                        <span className="font-bold text-sm">Ders Vakti! Yoklama Al</span>
+                                    </div>
+                                    <span className="bg-white text-ios-blue text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">Başlat →</span>
+                                </button>
+                            )}
                         </div>
                     </div>
                 ) : (
