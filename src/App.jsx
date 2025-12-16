@@ -17,6 +17,50 @@ const Login = lazy(() => import('./pages/Login'));
 const Settings = lazy(() => import('./pages/Settings'));
 const InstitutionSelector = lazy(() => import('./pages/InstitutionSelector'));
 const ProfileSetup = lazy(() => import('./pages/ProfileSetup'));
+// Skeleton Components
+const TabSkeleton = ({ tab }) => {
+  if (tab === 'dashboard') {
+    return (
+      <div className="pb-20 relative pt-2 animate-pulse px-4 mt-safe-top">
+        <div className="flex justify-between items-center mb-6 mt-4">
+          <div>
+            <div className="h-8 w-40 bg-gray-200 rounded-lg mb-2"></div>
+            <div className="h-4 w-24 bg-gray-100 rounded-lg"></div>
+          </div>
+          <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+        </div>
+        <div className="space-y-6">
+          <div className="h-64 w-full bg-gray-200 rounded-2xl shadow-sm"></div>
+          <div className="space-y-3">
+            <div className="h-6 w-32 bg-gray-200 rounded-lg mb-4"></div>
+            {[1, 2, 3].map(i => <div key={i} className="h-16 w-full bg-gray-100 rounded-xl"></div>)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (tab === 'students' || tab === 'finance') {
+    return (
+      <div className="pt-safe-top px-4 animate-pulse space-y-4">
+        <div className="flex justify-between items-center py-4">
+          <div className="h-8 w-32 bg-gray-200 rounded-lg"></div>
+          <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+        </div>
+        {[1, 2, 3, 4, 5].map(i => (
+          <div key={i} className="h-20 w-full bg-gray-50 rounded-2xl border border-gray-100"></div>
+        ))}
+      </div>
+    );
+  }
+
+  // Default spinner for other tabs
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="w-8 h-8 border-4 border-ios-blue border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
+};
 
 function AppContent() {
   // Get state from contexts
@@ -783,11 +827,7 @@ function AppContent() {
         }}
         hideTabBar={navigationStack.length > 0}
       >
-        <Suspense fallback={
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="w-8 h-8 border-4 border-ios-blue border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        }>
+        <Suspense fallback={<TabSkeleton tab={activeTab} />}>
           {renderContent()}
         </Suspense>
       </AppLayout>
