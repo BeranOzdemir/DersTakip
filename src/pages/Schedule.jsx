@@ -74,7 +74,7 @@ export default function Schedule({ showToast, onNavigate }) {
             const newLesson = {
                 id: Date.now() + count, // unique id assumption
                 studentId: parseInt(selectedStudentId),
-                date: currentDate.toISOString(),
+                date: format(currentDate, 'yyyy-MM-dd'),
                 time: lessonTime,
                 status: 'upcoming',
                 topic: '',
