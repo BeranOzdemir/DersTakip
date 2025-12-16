@@ -669,48 +669,20 @@ function AppContent() {
 
     // Tab Views
     if (activeTab === 'dashboard') return (
-      <Dashboard
-        students={students}
-        lessons={lessons}
-        setStudents={setStudents}
-        setLessons={setLessons}
-        cash={cash}
-        showToast={showToast}
-        setCash={setCash}
-        institutions={institutions}
-        activeInstitution={activeInstitution}
-        switchInstitution={switchInstitution}
-      />
+      <Dashboard showToast={showToast} />
     );
-    if (activeTab === 'students') return <Students students={students} setStudents={setStudents} onNavigate={navigateTo} />;
-    if (activeTab === 'schedule') return <Schedule lessons={lessons} setLessons={setLessons} students={students} showToast={showToast} />;
+    if (activeTab === 'students') return <Students onNavigate={navigateTo} />;
+    if (activeTab === 'schedule') return <Schedule showToast={showToast} onNavigate={navigateTo} />;
     if (activeTab === 'finance') return (
       <Finance
-        students={students}
-        setStudents={setStudents}
-        cash={cash}
-        setCash={setCash}
         showToast={showToast}
-        transactions={transactions}
-        setTransactions={setTransactions}
-        updateInstitution={updateActiveInstitution}
         onTransferToGlobalSafe={handleTransferToGlobalSafe}
       />
     );
     if (activeTab === 'settings') return (
       <Settings
-        user={user}
-        setUser={setUser}
-        onPhotoUpload={handlePhotoUpload}
-        onLogout={handleLogout}
         showToast={showToast}
-        institutions={institutions}
-        activeInstitution={activeInstitution}
-        addInstitution={addInstitution}
-        updateInstitution={updateInstitution}
-        deleteInstitution={deleteInstitution}
-        switchInstitution={switchInstitution}
-        onResetActiveInstitution={handleResetActiveInstitution}
+        onPhotoUpload={handlePhotoUpload}
       />
     );
 
@@ -758,16 +730,9 @@ function AppContent() {
     return (
       <>
         <InstitutionSelector
-          user={user}
-          institutions={institutions}
-          globalCash={globalCash}
-          globalTransactions={globalTransactions}
+          showToast={showToast}
           onResetGlobalSafe={handleResetGlobalSafe}
           onWithdrawFromGlobalSafe={handleWithdrawFromGlobalSafe}
-          onSelect={(id) => setActiveInstitutionId(id)}
-          onAdd={async (name, photo) => {
-            if (name) await addInstitution(name, photo);
-          }}
         />
         <Toast
           message={toast.message}
