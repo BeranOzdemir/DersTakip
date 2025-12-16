@@ -1,21 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { onAuthStateChanged, signOut } from 'firebase/auth'; // Import Auth functions
-import { auth } from './lib/firebase'; // Import auth instance
-import {
-  initializeUser,
-  getUserProfile,
-  updateUserProfile,
-  subscribeToInstitutions,
-  addInstitution as addInstitutionDB,
-  updateInstitution as updateInstitutionDB,
-  deleteInstitution as deleteInstitutionDB
-} from './lib/db'; // Import DB functions
+import React, { useState } from 'react';
+import { useAuth } from './contexts/AuthContext';
+import { useInstitution } from './contexts/InstitutionContext';
 import AppLayout from './components/layout/AppLayout';
 import Toast from './components/ui/Toast';
 import Students from './pages/Students';
 import PhotoCropper from './components/ui/PhotoCropper';
 import { getAvatarColor } from './lib/avatar';
-import { parseAmount, formatDateTime, useDebounce } from './lib/utils';
+import { parseAmount, formatDateTime } from './lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import Schedule from './pages/Schedule';
 import Finance from './pages/Finance';
@@ -23,304 +14,50 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Settings from './pages/Settings';
 import InstitutionSelector from './pages/InstitutionSelector';
+import ProfileSetup from './pages/ProfileSetup';
 
 function AppContent() {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [isUserLoadedFromDB, setIsUserLoadedFromDB] = useState(false);
+  // Get state from contexts
+  const {
+    currentUser,
+    user,
+    setUser,
+    globalCash,
+    setGlobalCash,
+    globalTransactions,
+    setGlobalTransactions,
+    isAuthenticated,
+    isAuthLoading,
+    handleLogout
+  } = useAuth();
 
-  const [institutions, setInstitutions] = useState([]);
-  const [activeInstitutionId, setActiveInstitutionId] = useState(null); // Default null to show selector
+  const {
+    institutions,
+    activeInstitutionId,
+    activeInstitution,
+    students,
+    lessons,
+    transactions,
+    cash,
+    setStudents,
+    setLessons,
+    setCash,
+    setTransactions,
+    updateActiveInstitution,
+    switchInstitution: setActiveInstitutionId,
+    addInstitution,
+    updateInstitution,
+    deleteInstitution,
+    handleResetActiveInstitution,
+    handleTransferToGlobalSafe,
+    handleResetGlobalSafe,
+    handleWithdrawFromGlobalSafe
+  } = useInstitution();
 
-
-
-  const [user, setUser] = useState({
-    name: 'Kullanıcı',
-    email: '',
-    avatarColor: 'bg-ios-blue',
-    photo: null
-  });
-
+  // UI-only state
   const [activeTab, setActiveTab] = useState('dashboard');
   const [navigationStack, setNavigationStack] = useState([]);
   const [isProfileComplete, setIsProfileComplete] = useState(() => localStorage.getItem('isProfileComplete') === 'true');
-
-  // Auth Listener
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      setIsAuthenticated(!!user);
-
-      if (user) {
-        try {
-          // Initialize/Fetch User
-          await initializeUser(user);
-          const profile = await getUserProfile(user.uid);
-          if (profile) {
-            setUser(prev => ({
-              ...prev,
-              name: profile.name || prev.name,
-              // email is handled by auth usually but good to sync
-              email: user.email,
-              photo: profile.photo || null
-            }));
-            setGlobalCash(profile.globalCash || 0); // Initialize Global Cash
-          } else {
-            setUser(prev => ({ ...prev, email: user.email }));
-          }
-          setIsUserLoadedFromDB(true);
-        } catch (error) {
-          console.error('Error loading user data:', error);
-          setUser(prev => ({ ...prev, email: user.email }));
-          setIsUserLoadedFromDB(true);
-        }
-      }
-      setIsAuthLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // Firestore Listener for Institutions
-  useEffect(() => {
-    if (!currentUser) {
-      setInstitutions([]);
-      return undefined; // No cleanup needed
-    }
-
-    const unsubscribe = subscribeToInstitutions(currentUser.uid, (data) => {
-      setInstitutions(data);
-
-      // Initialize Default Data if empty
-      if (data.length === 0) {
-        const defaultInst = {
-          name: 'Kurumum',
-          students: [],
-          lessons: [],
-          transactions: [],
-          cash: 0
-        };
-        addInstitutionDB(currentUser.uid, defaultInst);
-      }
-    });
-    return unsubscribe; // Cleanup function
-  }, [currentUser]);
-
-  // Ensure activeInstitutionId is valid
-  // REMOVED auto-select first institution to allow Selector Screen
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    setInstitutions([]);
-    setUser({ name: 'Kullanıcı', email: '', avatarColor: 'bg-ios-blue', photo: null });
-    setIsUserLoadedFromDB(false);
-    setActiveInstitutionId(null);
-  };
-
-
-
-  // Global Cash & History State
-  const [globalCash, setGlobalCash] = useState(0);
-  const [globalTransactions, setGlobalTransactions] = useState([]);
-
-  // Load from User Profile
-  useEffect(() => {
-    if (user) {
-      if (user.globalCash !== undefined) setGlobalCash(user.globalCash);
-      if (user.globalTransactions !== undefined) setGlobalTransactions(user.globalTransactions);
-    }
-  }, [user]);
-
-  // Sync back to DB (debounced to prevent race conditions)
-  const debouncedUpdateProfile = useDebounce((uid, data) => {
-    updateUserProfile(uid, data).catch(error => {
-      console.error('Failed to update user profile:', error);
-    });
-  }, 500);
-
-  useEffect(() => {
-    if (currentUser && isUserLoadedFromDB) {
-      debouncedUpdateProfile(currentUser.uid, {
-        name: user.name,
-        photo: user.photo,
-        globalCash: globalCash,
-        globalTransactions: globalTransactions
-      });
-    }
-  }, [user.name, user.photo, globalCash, globalTransactions, currentUser, isUserLoadedFromDB]);
-
-  // Multi-Institution State - Powered by Firestore
-
-
-  // Derived state: Current institution's data
-  const activeInstitution = institutions.find(i => i.id === activeInstitutionId) || null;
-  const students = activeInstitution?.students || [];
-  const lessons = activeInstitution?.lessons || [];
-  const transactions = activeInstitution?.transactions || [];
-  const cash = activeInstitution?.cash || 0;
-
-  // Update functions that modify active institution
-  // Update functions - DB Aware
-  const setStudents = (updaterOrValue) => {
-    if (!currentUser || !activeInstitution) return;
-    const current = activeInstitution.students || [];
-    const newVal = typeof updaterOrValue === 'function' ? updaterOrValue(current) : updaterOrValue;
-    updateInstitutionDB(currentUser.uid, activeInstitution.id, { students: newVal });
-  };
-
-  const setLessons = (updaterOrValue) => {
-    if (!currentUser || !activeInstitution) return;
-    const current = activeInstitution.lessons || [];
-    const newVal = typeof updaterOrValue === 'function' ? updaterOrValue(current) : updaterOrValue;
-    updateInstitutionDB(currentUser.uid, activeInstitution.id, { lessons: newVal });
-  };
-
-  const setCash = (updaterOrValue) => {
-    if (!currentUser || !activeInstitution) return;
-    const current = activeInstitution.cash || 0;
-    const newVal = typeof updaterOrValue === 'function' ? updaterOrValue(current) : updaterOrValue;
-    updateInstitutionDB(currentUser.uid, activeInstitution.id, { cash: newVal });
-  };
-
-  const setTransactions = (updaterOrValue) => {
-    if (!currentUser || !activeInstitution) return;
-    const current = activeInstitution.transactions || [];
-    const newVal = typeof updaterOrValue === 'function' ? updaterOrValue(current) : updaterOrValue;
-    updateInstitutionDB(currentUser.uid, activeInstitution.id, { transactions: newVal });
-  };
-
-  const updateActiveInstitution = (updates) => {
-    if (!currentUser || !activeInstitution) return;
-    updateInstitutionDB(currentUser.uid, activeInstitution.id, updates);
-  };
-
-  const handleTransferToGlobalSafe = (amount) => {
-    if (!activeInstitution || amount <= 0) return;
-
-    // 1. Update Institution: Deduct Cash, Add Transaction
-    const newCash = activeInstitution.cash - amount;
-    const newTx = {
-      id: uuidv4(),
-      type: 'Genel Kasa Transfer',
-      description: 'Genel kasaya aktarım',
-      amount: -amount,
-      date: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }),
-      time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
-    };
-
-    updateActiveInstitution({
-      cash: newCash,
-      transactions: [newTx, ...(activeInstitution.transactions || [])]
-    });
-
-    // 2. Update Global Safe History
-    const globalTx = {
-      id: uuidv4(),
-      type: 'transfer_in',
-      institutionName: activeInstitution.name,
-      amount: amount,
-      date: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }),
-      time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setGlobalTransactions(prev => [globalTx, ...prev]);
-    setGlobalCash(prev => prev + amount);
-    showToast(`${amount}₺ Genel Kasaya aktarıldı.`);
-  };
-
-  const handleResetGlobalSafe = () => {
-    if (globalCash <= 0) return;
-
-    const withdrawTx = {
-      id: uuidv4(),
-      type: 'withdraw',
-      institutionName: 'Kasa Sıfırlama',
-      amount: -globalCash,
-      date: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }),
-      time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setGlobalTransactions(prev => [withdrawTx, ...prev]);
-    setGlobalCash(0);
-    showToast('Genel Kasa sıfırlandı (Para çekildi).');
-  };
-
-  const handleWithdrawFromGlobalSafe = (amount, description = 'Para Çekme') => {
-    if (amount <= 0) {
-      showToast('Geçersiz tutar.', 'error');
-      return;
-    }
-    if (amount > globalCash) {
-      showToast('Yetersiz bakiye.', 'error');
-      return;
-    }
-
-    const withdrawTx = {
-      id: uuidv4(),
-      type: 'withdraw',
-      institutionName: description,
-      amount: -amount,
-      date: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }),
-      time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setGlobalTransactions(prev => [withdrawTx, ...prev]);
-    setGlobalCash(prev => prev - amount);
-    showToast(`${amount}₺ çekildi.`);
-  };
-
-  const handleResetActiveInstitution = () => {
-    if (!activeInstitution) return;
-
-    updateActiveInstitution({
-      students: [],
-      lessons: [],
-      transactions: [],
-      cash: 0
-    });
-
-    showToast('Kurum verileri sıfırlandı.');
-  };
-
-  // Institution management functions
-  const switchInstitution = (id) => {
-    setActiveInstitutionId(id);
-    setNavigationStack([]); // Clear navigation stack when switching
-    setActiveTab('dashboard'); // Return to dashboard
-  };
-
-  const addInstitution = async (name, photo = null) => {
-    if (!currentUser) return;
-    const newInst = {
-      name: name,
-      photo: photo,
-      students: [],
-      lessons: [],
-      transactions: [],
-      cash: 0
-    };
-    const id = await addInstitutionDB(currentUser.uid, newInst);
-    showToast(`${name} kurumu eklendi.`);
-    return id;
-  };
-
-
-
-  const updateInstitution = (id, updates) => {
-    if (!currentUser) return;
-    updateInstitutionDB(currentUser.uid, id, updates);
-  };
-
-  const deleteInstitution = async (id) => {
-    if (!currentUser) return;
-    if (institutions.length <= 1) {
-      showToast('En az bir kurum olmalıdır.', 'error');
-      return;
-    }
-    await deleteInstitutionDB(currentUser.uid, id);
-    showToast('Kurum silindi.', 'error');
-  };
-
 
   // Instrument Picker State
   const [isInstrumentPickerOpen, setIsInstrumentPickerOpen] = useState(false);

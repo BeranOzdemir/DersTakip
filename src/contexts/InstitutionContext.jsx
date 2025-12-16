@@ -6,6 +6,7 @@ import {
     deleteInstitution as deleteInstitutionDB
 } from '../lib/db';
 import { useAuth } from './AuthContext';
+import { v4 as uuidv4 } from 'uuid';
 
 const InstitutionContext = createContext(null);
 
@@ -18,7 +19,7 @@ export const useInstitution = () => {
 };
 
 export const InstitutionProvider = ({ children }) => {
-    const { currentUser } = useAuth();
+    const { currentUser, globalCash, setGlobalCash, globalTransactions, setGlobalTransactions } = useAuth();
     const [institutions, setInstitutions] = useState([]);
     const [activeInstitutionId, setActiveInstitutionId] = useState(null);
 
@@ -148,6 +149,101 @@ export const InstitutionProvider = ({ children }) => {
         });
     };
 
+    // Global Safe Functions
+    const handleTransferToGlobalSafe = (amount) => {
+        if (!activeInstitution || amount <= 0 || amount > cash) return false;
+
+        const { date, time } = (() => {
+            const d = new Date();
+            return {
+                date: d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }),
+                time: d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+            };
+        })();
+
+        // Update institution
+        const institutionTx = {
+            id: uuidv4(),
+            type: 'Genel Kasa Transfer',
+            description: 'Genel kasaya aktarım',
+            amount: -amount,
+            date,
+            time
+        };
+
+        updateActiveInstitution({
+            cash: cash - amount,
+            transactions: [institutionTx, ...transactions]
+        });
+
+        // Update global safe
+        const globalTx = {
+            id: uuidv4(),
+            type: 'transfer_in',
+            institutionName: activeInstitution.name,
+            amount,
+            date,
+            time
+        };
+
+        setGlobalTransactions(prev => [globalTx, ...prev]);
+        setGlobalCash(prev => prev + amount);
+
+        return true;
+    };
+
+    const handleResetGlobalSafe = () => {
+        if (globalCash <= 0) return false;
+
+        const { date, time } = (() => {
+            const d = new Date();
+            return {
+                date: d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }),
+                time: d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+            };
+        })();
+
+        const withdrawTx = {
+            id: uuidv4(),
+            type: 'withdraw',
+            institutionName: 'Kasa Sıfırlama',
+            amount: -globalCash,
+            date,
+            time
+        };
+
+        setGlobalTransactions(prev => [withdrawTx, ...prev]);
+        setGlobalCash(0);
+
+        return true;
+    };
+
+    const handleWithdrawFromGlobalSafe = (amount, description = 'Para Çekme') => {
+        if (amount <= 0 || amount > globalCash) return false;
+
+        const { date, time } = (() => {
+            const d = new Date();
+            return {
+                date: d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }),
+                time: d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+            };
+        })();
+
+        const withdrawTx = {
+            id: uuidv4(),
+            type: 'withdraw',
+            institutionName: description,
+            amount: -amount,
+            date,
+            time
+        };
+
+        setGlobalTransactions(prev => [withdrawTx, ...prev]);
+        setGlobalCash(prev => prev - amount);
+
+        return true;
+    };
+
     const value = {
         institutions,
         activeInstitutionId,
@@ -165,7 +261,10 @@ export const InstitutionProvider = ({ children }) => {
         addInstitution,
         updateInstitution,
         deleteInstitution,
-        handleResetActiveInstitution
+        handleResetActiveInstitution,
+        handleTransferToGlobalSafe,
+        handleResetGlobalSafe,
+        handleWithdrawFromGlobalSafe
     };
 
     return (
