@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut, deleteUser } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import {
     initializeUser,
     getUserProfile,
-    updateUserProfile
+    updateUserProfile,
+    deleteUserData
 } from '../lib/db';
 import { useDebounce } from '../lib/utils';
 
@@ -92,6 +93,27 @@ export const AuthProvider = ({ children }) => {
         setIsUserLoadedFromDB(false);
     };
 
+    const handleDeleteAccount = async () => {
+        if (!currentUser) return;
+
+        try {
+            // 1. Delete all Firestore data
+            await deleteUserData(currentUser.uid);
+
+            // 2. Delete Firebase Authentication account
+            await deleteUser(currentUser);
+
+            // 3. Reset state
+            setUser({ name: 'Kullanıcı', email: '', avatarColor: 'bg-ios-blue', photo: null });
+            setGlobalCash(0);
+            setGlobalTransactions([]);
+            setIsUserLoadedFromDB(false);
+        } catch (error) {
+            console.error('Error deleting account:', error);
+            throw error;
+        }
+    };
+
     const value = {
         currentUser,
         user,
@@ -103,7 +125,8 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated,
         isAuthLoading,
         isUserLoadedFromDB,
-        handleLogout
+        handleLogout,
+        handleDeleteAccount
     };
 
     return (

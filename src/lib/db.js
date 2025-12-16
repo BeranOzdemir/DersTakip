@@ -10,7 +10,8 @@ import {
     serverTimestamp,
     query,
     orderBy,
-    getDoc
+    getDoc,
+    getDocs
 } from 'firebase/firestore';
 
 // Collection References
@@ -54,6 +55,24 @@ export const updateUserProfile = async (userId, data) => {
         await updateDoc(userRef, data);
     } catch (error) {
         console.error('Error updating user profile:', error);
+        throw error;
+    }
+};
+
+export const deleteUserData = async (userId) => {
+    try {
+        // Delete all institutions first
+        const institutionsRef = getInstitutionsRef(userId);
+        const snapshot = await getDocs(institutionsRef);
+
+        const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+
+        // Delete user document
+        const userRef = doc(db, 'users', userId);
+        await deleteDoc(userRef);
+    } catch (error) {
+        console.error('Error deleting user data:', error);
         throw error;
     }
 };

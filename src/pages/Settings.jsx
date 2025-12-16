@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useInstitution } from '../contexts/InstitutionContext';
 
 export default function Settings({ showToast, onPhotoUpload }) {
-    const { user, setUser, handleLogout: onLogout } = useAuth();
+    const { user, setUser, handleLogout: onLogout, handleDeleteAccount } = useAuth();
     const { institutions, activeInstitution, addInstitution, updateInstitution, deleteInstitution, switchInstitution, handleResetActiveInstitution: onResetActiveInstitution } = useInstitution();
 
     const fileInputRef = useRef(null);
@@ -206,7 +206,7 @@ export default function Settings({ showToast, onPhotoUpload }) {
 
             {/* Logout */}
             <h2 className="text-ios-subtext uppercase text-[13px] mb-2 ml-8">OTURUM</h2>
-            <div className="px-4">
+            <div className="px-4 mb-6">
                 <button
                     onClick={() => {
                         localStorage.removeItem('isAuthenticated');
@@ -215,6 +215,17 @@ export default function Settings({ showToast, onPhotoUpload }) {
                     className="w-full bg-white text-ios-red py-3.5 rounded-xl font-semibold shadow-ios active:scale-95 transition-transform text-[17px]"
                 >
                     Çıkış Yap
+                </button>
+            </div>
+
+            {/* Delete Account */}
+            <h2 className="text-ios-subtext uppercase text-[13px] mb-2 ml-8">HESAP</h2>
+            <div className="px-4 mb-8">
+                <button
+                    onClick={() => setModalType('deleteAccountConfirm')}
+                    className="w-full bg-white text-ios-red py-3.5 rounded-xl font-semibold shadow-ios active:scale-95 transition-transform text-[17px] border border-red-200"
+                >
+                    Hesabı Sil
                 </button>
             </div>
 
@@ -408,6 +419,61 @@ export default function Settings({ showToast, onPhotoUpload }) {
                                         }
                                         setModalType(null);
                                     }} className="bg-orange-600 text-white font-semibold py-3 rounded-xl">Sıfırla</button>
+                                </div>
+                            </>
+                        )}
+
+                        {/* Delete Account Confirm Modal */}
+                        {modalType === 'deleteAccountConfirm' && (
+                            <>
+                                <div className="text-center mb-6">
+                                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <span className="text-3xl">⚠️</span>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-red-600 mb-3">Hesabı Kalıcı Olarak Sil</h3>
+                                    <div className="text-left bg-red-50 rounded-xl p-4 mb-4">
+                                        <p className="text-sm text-gray-700 mb-2">
+                                            <strong className="text-red-600">Aşağıdakiler kalıcı olarak silinecek:</strong>
+                                        </p>
+                                        <ul className="text-sm text-gray-600 space-y-1 ml-4">
+                                            <li>• Kullanıcı profiliniz</li>
+                                            <li>• Tüm kurumlarınız</li>
+                                            <li>• Tüm öğrenci kayıtları</li>
+                                            <li>• Tüm dersler ve program</li>
+                                            <li>• Tüm finansal kayıtlar</li>
+                                            <li>• Genel kasa bilgileri</li>
+                                        </ul>
+                                    </div>
+                                    <p className="text-xs text-red-600 font-bold">
+                                        ⚠️ BU İŞLEM GERİ ALINAMAZ!
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        Hesabınızı silmek istediğinizden emin misiniz?
+                                    </p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => setModalType(null)}
+                                        className="bg-gray-100 text-gray-600 font-semibold py-3 rounded-xl"
+                                    >
+                                        Vazgeç
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await handleDeleteAccount();
+                                                setModalType(null);
+                                                localStorage.clear();
+                                                showToast('Hesabınız kalıcı olarak silindi', 'error');
+                                            } catch (error) {
+                                                console.error('Delete account error:', error);
+                                                showToast('Hesap silinirken hata oluştu: ' + error.message, 'error');
+                                            }
+                                        }}
+                                        className="bg-red-600 text-white font-semibold py-3 rounded-xl"
+                                    >
+                                        Hesabı Sil
+                                    </button>
                                 </div>
                             </>
                         )}
