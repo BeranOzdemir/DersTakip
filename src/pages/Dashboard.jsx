@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { parse, differenceInMinutes } from 'date-fns';
 import { getAvatarColor } from '../lib/avatar';
 import { LayoutGrid } from 'lucide-react';
 import { useInstitution } from '../contexts';
@@ -214,13 +215,17 @@ export default function Dashboard({ showToast }) {
                             <div className="text-2xl font-medium mt-2">{nextLessonStudent.name}</div>
 
                             {(() => {
-                                // Create Date from combined string to ensure Local Time consistency
-                                const lessonDate = new Date(`${nextLesson.date}T${nextLesson.time}:00`);
+                                // Robust time calculation using date-fns
+                                // nextLesson.date is 'yyyy-MM-dd', time is 'HH:mm'
+                                const lessonStart = parse(`${nextLesson.date} ${nextLesson.time}`, 'yyyy-MM-dd HH:mm', new Date());
                                 const now = new Date();
-                                const diffMins = (lessonDate - now) / 1000 / 60; // minutes
+                                const diffMins = differenceInMinutes(lessonStart, now);
 
                                 // Show if within 10 mins BEFORE start, and up to 30 mins AFTER start
                                 const isTime = diffMins <= 10 && diffMins > -30;
+
+                                // DEBUG: Remove this line after verifying
+                                // console.log('Lesson:', nextLesson.time, 'Now:', now.toLocaleTimeString(), 'Diff:', diffMins);
 
                                 if ((nextLesson.status === 'upcoming' || nextLesson.status === 'scheduled') && isTime) {
                                     return (
