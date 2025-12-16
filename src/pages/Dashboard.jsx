@@ -2,8 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { getAvatarColor } from '../lib/avatar';
 import { LayoutGrid } from 'lucide-react';
 import { useInstitution } from '../contexts';
+import { useAuth } from '../contexts/AuthContext';
+import { getToken } from 'firebase/messaging';
+import { messaging } from '../lib/firebase';
+import { saveUserFcmToken } from '../lib/db';
 
 export default function Dashboard({ showToast }) {
+    const { currentUser } = useAuth();
     const { students, lessons, setStudents, setLessons, cash, setCash, institutions, activeInstitution, switchInstitution } = useInstitution();
 
     // Local state for modals, but data comes from context
@@ -18,10 +23,34 @@ export default function Dashboard({ showToast }) {
     const today = new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
 
     useEffect(() => {
-        if ('Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission();
-        }
-    }, []);
+        const setupNotifications = async () => {
+            try {
+                if ('Notification' in window && currentUser) {
+                    let permission = Notification.permission;
+
+                    if (permission === 'default') {
+                        permission = await Notification.requestPermission();
+                    }
+
+                    if (permission === 'granted') {
+                        const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY || 'X_NZXmcbi5IHpX95ggJ-PvHQTZsccN2Ljy6agWmP-10';
+                        if (vapidKey) {
+                            const token = await getToken(messaging, { vapidKey });
+                            if (token) {
+                                await saveUserFcmToken(currentUser.uid, token);
+                            }
+                        } else {
+                            console.log('Notification setup skipped: VITE_FIREBASE_VAPID_KEY missing');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Notification setup failed:', error);
+            }
+        };
+
+        setupNotifications();
+    }, [currentUser]);
 
     // Sort by Date AND Time
     upcomingLessons.sort((a, b) => {

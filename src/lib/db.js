@@ -11,8 +11,20 @@ import {
     query,
     orderBy,
     getDoc,
-    getDocs
+    getDocs,
+    arrayUnion
 } from 'firebase/firestore';
+
+export const saveUserFcmToken = async (userId, token) => {
+    try {
+        const userRef = doc(db, 'users', userId);
+        await setDoc(userRef, {
+            fcmTokens: arrayUnion(token)
+        }, { merge: true });
+    } catch (error) {
+        console.error('Error saving FCM token:', error);
+    }
+};
 
 // Collection References
 const getUsersRef = () => collection(db, 'users');
