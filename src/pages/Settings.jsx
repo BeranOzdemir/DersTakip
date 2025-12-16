@@ -359,19 +359,27 @@ export default function Settings({ showToast, onPhotoUpload }) {
                                 <input
                                     id="editInstitutionName"
                                     type="text"
-                                    defaultValue={selectedInstitution.name}
+                                    value={selectedInstitution.name}
+                                    onChange={(e) => setSelectedInstitution(prev => ({ ...prev, name: e.target.value }))}
                                     className="w-full bg-gray-100 rounded-xl px-4 py-3 text-[17px] mb-6 focus:outline-none focus:ring-2 focus:ring-ios-blue/50"
                                     placeholder="Kurum Adı"
                                     autoFocus
                                 />
                                 <div className="grid grid-cols-2 gap-3">
                                     <button onClick={() => setModalType(null)} className="bg-gray-100 text-gray-600 font-semibold py-3 rounded-xl">Vazgeç</button>
-                                    <button onClick={() => {
-                                        const name = document.getElementById('editInstitutionName').value;
-                                        if (name.trim()) {
-                                            updateInstitution(selectedInstitution.id, { name, photo: selectedInstitution.photo });
-                                            showToast('Kurum güncellendi.');
-                                            setModalType(null);
+                                    <button onClick={async () => {
+                                        if (selectedInstitution.name.trim()) {
+                                            try {
+                                                await updateInstitution(selectedInstitution.id, {
+                                                    name: selectedInstitution.name,
+                                                    photo: selectedInstitution.photo
+                                                });
+                                                showToast('Kurum güncellendi.');
+                                                setModalType(null);
+                                            } catch (error) {
+                                                console.error('Update institution error:', error);
+                                                showToast('Güncelleme başarısız: ' + error.message, 'error');
+                                            }
                                         }
                                     }} className="bg-ios-blue text-white font-semibold py-3 rounded-xl">Kaydet</button>
                                 </div>

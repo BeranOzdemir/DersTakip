@@ -121,9 +121,9 @@ export const InstitutionProvider = ({ children }) => {
         await addInstitutionDB(currentUser.uid, newInst);
     };
 
-    const updateInstitution = (id, updates) => {
+    const updateInstitution = async (id, updates) => {
         if (!currentUser) return;
-        updateInstitutionDB(currentUser.uid, id, updates);
+        await updateInstitutionDB(currentUser.uid, id, updates);
     };
 
     const deleteInstitution = async (id) => {
