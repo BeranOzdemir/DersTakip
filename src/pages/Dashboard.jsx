@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getAvatarColor } from '../lib/avatar';
 import { LayoutGrid } from 'lucide-react';
 import { useInstitution } from '../contexts';
