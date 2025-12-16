@@ -31,7 +31,7 @@ export default function AppLayout({ children, activeTab, onTabChange, hideTabBar
 
                     {/* Safe Area Spacer */}
                     <div className="safe-area-bottom bg-transparent relative z-10">
-                        <nav className="flex items-center justify-around h-[56px] pb-1">
+                        <nav className="flex items-center justify-around h-[64px] pb-2">
                             {tabs.map((tab) => {
                                 const Icon = tab.icon;
                                 const isActive = activeTab === tab.id;
@@ -43,7 +43,7 @@ export default function AppLayout({ children, activeTab, onTabChange, hideTabBar
                                         className="flex flex-col items-center justify-center w-full h-full active:opacity-50 transition-opacity"
                                     >
                                         <Icon
-                                            size={28}
+                                            size={32}
                                             strokeWidth={isActive ? 2.5 : 2}
                                             className={cn(
                                                 "mb-[3px] transition-colors duration-200",
@@ -51,7 +51,7 @@ export default function AppLayout({ children, activeTab, onTabChange, hideTabBar
                                             )}
                                         />
                                         <span className={cn(
-                                            "text-[11px] font-medium transition-colors duration-200",
+                                            "text-[10px] font-medium transition-colors duration-200",
                                             isActive ? "text-ios-blue" : "text-ios-subtext"
                                         )}>
                                             {tab.label}

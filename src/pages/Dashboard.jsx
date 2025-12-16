@@ -17,6 +17,12 @@ export default function Dashboard({ showToast }) {
     );
     const today = new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
 
+    useEffect(() => {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }, []);
+
     // Sort by Date AND Time
     upcomingLessons.sort((a, b) => {
         const dateA = new Date(a.date);
