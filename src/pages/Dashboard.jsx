@@ -64,6 +64,42 @@ export default function Dashboard({ showToast }) {
     const nextLesson = upcomingLessons[0];
     const nextLessonStudent = nextLesson ? students.find(s => s.id === nextLesson.studentId) : null;
 
+    // Notification state to prevent duplicate alerts
+    const [notifiedLessons, setNotifiedLessons] = useState(new Set());
+
+    // Check for upcoming lessons periodically
+    useEffect(() => {
+        const checkUpcomingLessons = () => {
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+            const now = new Date();
+            upcomingLessons.forEach(lesson => {
+                if (notifiedLessons.has(lesson.id) || (lesson.status !== 'upcoming' && lesson.status !== 'scheduled')) return;
+
+                const lessonDate = new Date(lesson.date);
+                const [hours, mins] = lesson.time.split(':');
+                lessonDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
+
+                const diffMins = (lessonDate - now) / (1000 * 60);
+
+                // Notify if within 10 minutes
+                if (diffMins <= 10 && diffMins > -15) {
+                    new Notification("Ders Vakti! 🔔", {
+                        body: `${students.find(s => s.id === lesson.studentId)?.name} ile ders başlıyor. Yoklama almayı unutma!`,
+                        icon: '/vite.svg'
+                    });
+
+                    setNotifiedLessons(prev => new Set(prev).add(lesson.id));
+                }
+            });
+        };
+
+        const interval = setInterval(checkUpcomingLessons, 60000); // Check every minute
+        checkUpcomingLessons(); // Also check immediately on mount/update
+
+        return () => clearInterval(interval);
+    }, [upcomingLessons, notifiedLessons, students]);
+
     const handleLessonCardClick = (lesson) => {
         if (!lesson) return;
 
@@ -76,6 +112,8 @@ export default function Dashboard({ showToast }) {
             setActiveLessonModal('details');
         }
     };
+
+
 
     const handleAttendance = (isPresent) => {
         if (isPresent) {
@@ -187,10 +225,19 @@ export default function Dashboard({ showToast }) {
 
                                 if ((nextLesson.status === 'upcoming' || nextLesson.status === 'scheduled') && isTime) {
                                     return (
-                                        <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md rounded-lg p-3 mt-4">
-                                            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-                                            <span className="text-sm font-medium">Dersin başlamasına az kaldı. Yoklama al?</span>
-                                        </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleLessonCardClick(nextLesson);
+                                            }}
+                                            className="mt-4 w-full bg-white/20 backdrop-blur-md rounded-xl p-3 flex items-center justify-between hover:bg-white/30 transition-colors animate-bounce"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-3 h-3 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]"></div>
+                                                <span className="font-bold text-sm">Ders Vakti! Yoklama Al</span>
+                                            </div>
+                                            <span className="bg-white text-ios-blue text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">Başlat →</span>
+                                        </button>
                                     );
                                 }
                                 return null;
