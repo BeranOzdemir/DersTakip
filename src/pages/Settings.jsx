@@ -1,8 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { ChevronRight, Camera } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { useInstitution } from '../contexts/InstitutionContext';
 
-export default function Settings({ onLogout, showToast, institutions, activeInstitution, addInstitution, updateInstitution, deleteInstitution, switchInstitution, user, setUser, onPhotoUpload, onResetActiveInstitution }) {
-    // Remove local user state as it is now passed via props
+export default function Settings({ showToast, onPhotoUpload }) {
+    const { user, setUser, handleLogout: onLogout } = useAuth();
+    const { institutions, activeInstitution, addInstitution, updateInstitution, deleteInstitution, switchInstitution, handleResetActiveInstitution: onResetActiveInstitution } = useInstitution();
+
     const fileInputRef = useRef(null);
 
     const [modalType, setModalType] = useState(null); // 'name' | 'password' | 'addInstitution' | 'editInstitution' | 'deleteConfirm' | 'resetDataConfirm' | null

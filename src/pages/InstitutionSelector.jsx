@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { Plus, ChevronRight, Wallet, Camera } from 'lucide-react';
 import PhotoCropper from '../components/ui/PhotoCropper';
+import { useAuth } from '../contexts/AuthContext';
+import { useInstitution } from '../contexts/InstitutionContext';
 
-export default function InstitutionSelector({ user, institutions, onSelect, onAdd, globalCash, globalTransactions, onResetGlobalSafe, onWithdrawFromGlobalSafe }) {
+export default function InstitutionSelector({ showToast, onResetGlobalSafe, onWithdrawFromGlobalSafe }) {
+    const { globalCash, globalTransactions } = useAuth();
+    const { institutions, switchInstitution: onSelectInstitution, addInstitution: onAddInstitution } = useInstitution();
+
     const totalStudents = institutions.reduce((acc, inst) => acc + (inst.students?.length || 0), 0);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false); // Global Safe History Modal

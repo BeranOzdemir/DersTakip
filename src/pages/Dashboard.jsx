@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { getAvatarColor } from '../lib/avatar';
 import { LayoutGrid } from 'lucide-react';
+import { useInstitution } from '../contexts';
 
-export default function Dashboard({ students, lessons, setStudents, setLessons, showToast, cash, setCash, institutions, activeInstitution, switchInstitution }) {
-    // Local state for modals, but data comes from props
+export default function Dashboard({ showToast }) {
+    const { students, lessons, setStudents, setLessons, cash, setCash, institutions, activeInstitution, switchInstitution } = useInstitution();
+
+    // Local state for modals, but data comes from context
     const [activeLessonModal, setActiveLessonModal] = useState(null); // 'attendance' | 'details' | null
     const [selectedLesson, setSelectedLesson] = useState(null); // The lesson object being acted upon
 

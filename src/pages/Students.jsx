@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { List, ListItem } from '../components/ui/List';
 import Avatar from '../components/ui/Avatar';
+import { useInstitution } from '../contexts';
 
-export default function Students({ students, onNavigate }) {
+export default function Students({ onNavigate }) {
+    const { students } = useInstitution();
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredStudents = students.filter(s =>

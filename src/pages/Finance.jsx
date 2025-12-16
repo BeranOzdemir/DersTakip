@@ -3,10 +3,11 @@ import { List, ListItem } from '../components/ui/List';
 import { Plus, Minus, ArrowUpRight } from 'lucide-react';
 import { parseAmount, formatDateTime } from '../lib/utils';
 import { v4 as uuidv4 } from 'uuid';
+import { useInstitution } from '../contexts';
 
-export default function Finance({ students, setStudents, cash, setCash, showToast, transactions: propTransactions, setTransactions, updateInstitution, onTransferToGlobalSafe }) {
-    // Fallback to empty if not passed yet
-    const transactions = propTransactions || [];
+export default function Finance({ showToast, onTransferToGlobalSafe }) {
+    const { students, setStudents, cash, setCash, transactions, setTransactions, updateActiveInstitution: updateInstitution } = useInstitution();
+
     const [isCollectConfirmOpen, setIsCollectConfirmOpen] = useState(false);
     const [view, setView] = useState('main'); // 'main' | 'history'
     const [isGlobalTransferOpen, setIsGlobalTransferOpen] = useState(false);

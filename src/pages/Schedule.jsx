@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { format, addDays, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addWeeks, addMonths, parseISO, startOfDay } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { Calendar, Clock, ChevronDown, Repeat, X } from 'lucide-react';
+import { useInstitution } from '../contexts';
 
-export default function Schedule({ lessons, setLessons, students, showToast }) {
+export default function Schedule({ showToast, onNavigate }) {
+    const { lessons, setLessons, students, setStudents, updateActiveInstitution: updateInstitution } = useInstitution();
+
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [viewMode, setViewMode] = useState('week'); // 'week' | 'month'
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
