@@ -1,0 +1,389 @@
+import React, { useState } from 'react';
+import { getAvatarColor } from '../lib/avatar';
+import { LayoutGrid } from 'lucide-react';
+
+export default function Dashboard({ students, lessons, setStudents, setLessons, showToast, cash, setCash, institutions, activeInstitution, switchInstitution }) {
+    // Local state for modals, but data comes from props
+    const [activeLessonModal, setActiveLessonModal] = useState(null); // 'attendance' | 'details' | null
+    const [selectedLesson, setSelectedLesson] = useState(null); // The lesson object being acted upon
+
+    const upcomingLessons = lessons.filter(l => (l.status === 'upcoming' || l.status === 'scheduled' || l.status === 'started'));
+    const today = new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+    // Sort by Date AND Time
+    upcomingLessons.sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        const dateDiff = dateA - dateB;
+        if (dateDiff !== 0) return dateDiff;
+        return a.time.localeCompare(b.time);
+    });
+
+    const nextLesson = upcomingLessons[0];
+    const nextLessonStudent = nextLesson ? students.find(s => s.id === nextLesson.studentId) : null;
+
+    const handleLessonCardClick = (lesson) => {
+        if (!lesson) return;
+
+        const student = students.find(s => s.id === lesson.studentId);
+        setSelectedLesson({ ...lesson, student });
+
+        if (lesson.status === 'upcoming' || lesson.status === 'scheduled') {
+            setActiveLessonModal('attendance');
+        } else if (lesson.status === 'started') {
+            setActiveLessonModal('details');
+        }
+    };
+
+    const handleAttendance = (isPresent) => {
+        if (isPresent) {
+            // Mark as started
+            updateLessonStatus(selectedLesson.id, 'started', 'present');
+            setActiveLessonModal(null);
+        } else {
+            // Mark as cancelled, close
+            updateLessonStatus(selectedLesson.id, 'cancelled', 'absent');
+            setActiveLessonModal(null);
+        }
+    };
+
+    const handleCompleteLesson = (topic, homework, paymentMethod) => {
+        const student = selectedLesson.student;
+        let newBalance = student.balance;
+        let pStatus = 'unpaid';
+
+        if (paymentMethod === 'balance') {
+            newBalance -= student.feePerLesson;
+            pStatus = 'deducted_balance';
+        } else if (paymentMethod === 'cash') {
+            pStatus = 'paid_cash';
+            setCash(prev => prev + student.feePerLesson);
+        } else {
+            // Borç
+            newBalance -= student.feePerLesson; // Borç olarak bakiyeden düşüyoruz (negatif bakiye)
+            pStatus = 'unpaid';
+        }
+
+        // Update Student Balance
+        const updatedStudents = students.map(s => s.id === student.id ? { ...s, balance: newBalance } : s);
+        setStudents(updatedStudents);
+
+        // Update Lesson
+        const updatedLessons = lessons.map(l => l.id === selectedLesson.id ? {
+            ...l,
+            status: 'completed',
+            topic,
+            homework,
+            paymentStatus: pStatus
+        } : l);
+        setLessons(updatedLessons);
+        showToast('Ders başarıyla tamamlandı!');
+        setActiveLessonModal(null);
+    };
+
+    const updateLessonStatus = (id, status, attendance) => {
+        const updated = lessons.map(l => l.id === id ? { ...l, status, attendance } : l);
+        setLessons(updated);
+    };
+
+    return (
+        <div className="pb-20 relative pt-2">
+            <div className="flex justify-between items-start mb-6">
+                <div>
+                    <h1 className="text-[34px] font-bold tracking-tight">{activeInstitution?.name || 'Özet'}</h1>
+                    <p className="text-ios-subtext text-lg capitalize">{today}</p>
+                </div>
+                <button
+                    onClick={() => switchInstitution(null)}
+                    className="text-gray-600 active:opacity-50 transition-opacity p-2 bg-gray-100 rounded-full"
+                    title="Kurum Değiştir"
+                >
+                    <LayoutGrid size={20} strokeWidth={2} />
+                </button>
+            </div>
+
+            <div className="space-y-6">
+                {/* Smart Next Lesson Card */}
+                {nextLesson && nextLessonStudent ? (
+                    <div
+                        onClick={() => handleLessonCardClick(nextLesson)}
+                        className="relative overflow-hidden rounded-2xl shadow-ios-lg p-6 text-white active:scale-98 transition-transform cursor-pointer"
+                    >
+                        <div className={`absolute inset-0 bg-gradient-to-br ${nextLesson.status === 'started' ? 'from-green-500 to-emerald-600 animate-pulse' : 'from-ios-blue to-ios-purple'} opacity-90`}></div>
+                        <div className="relative z-10">
+                            <div className="flex justify-between items-start">
+                                <div className="text-blue-100 text-sm font-medium mb-1 uppercase tracking-wide">
+                                    {nextLesson.status === 'started' ? 'DERS DEVAM EDİYOR' : 'SIRADAKİ DERS'}
+                                </div>
+                                {nextLesson.status === 'started' && <div className="text-xs bg-white/20 px-2 py-1 rounded">Bitirmek için tıkla</div>}
+                            </div>
+
+                            <div className="flex justify-between items-center mt-2">
+                                <div className="text-6xl font-bold tracking-tight">{nextLesson.time}</div>
+                                {nextLessonStudent.photo ? (
+                                    <div className="w-24 h-24 rounded-full bg-white/20 shadow-lg overflow-hidden border-2 border-white/30">
+                                        <img src={nextLessonStudent.photo} alt={nextLessonStudent.name} className="w-full h-full object-cover" />
+                                    </div>
+                                ) : (
+                                    <div className="w-32 h-32 rounded-full bg-white/20 flex items-center justify-center text-5xl font-bold shadow-lg border-2 border-white/30">
+                                        {nextLessonStudent.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="text-2xl font-medium mt-2">{nextLessonStudent.name}</div>
+
+                            {(() => {
+                                const lessonDate = new Date(nextLesson.date);
+                                const [hours, mins] = nextLesson.time.split(':');
+                                lessonDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
+                                const now = new Date();
+                                const diffMins = (lessonDate - now) / (1000 * 60);
+
+                                // Show if within 10 mins OR if late (negative diff)
+                                const isTime = diffMins <= 10;
+
+                                if ((nextLesson.status === 'upcoming' || nextLesson.status === 'scheduled') && isTime) {
+                                    return (
+                                        <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md rounded-lg p-3 mt-4">
+                                            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                                            <span className="text-sm font-medium">Dersin başlamasına az kaldı. Yoklama al?</span>
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            })()}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="p-6 bg-ios-card rounded-xl shadow-ios flex items-center justify-center text-ios-subtext">
+                        Aktif ders bulunmuyor.
+                    </div>
+                )}
+
+                {/* Today's List */}
+                <div className="p-4 bg-ios-card rounded-xl shadow-ios">
+                    {/* ... (Same list code, using local state) */}
+                    <h2 className="font-semibold text-lg mb-4 flex justify-between items-center">
+                        Program
+                        <span className="text-sm font-normal text-ios-subtext bg-gray-100 px-2 py-1 rounded-md">{upcomingLessons.length}</span>
+                    </h2>
+                    {upcomingLessons.length > 0 ? (
+                        <div className="space-y-3">
+                            {upcomingLessons.map(l => (
+                                <div key={l.id} className="flex justify-between items-center border-l-[3px] border-ios-blue pl-3 py-1">
+                                    <div>
+                                        <div className="font-medium text-[15px]">{l.time}</div>
+                                        <div className="text-xs text-ios-subtext">
+                                            {students.find(s => s.id === l.studentId)?.name}
+                                        </div>
+                                    </div>
+                                    <span className={`text-xs px-2 py-1 rounded ${l.status === 'started' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-ios-blue'}`}>
+                                        {l.status === 'started' ? 'Sürüyor' : 'Planlı'}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-ios-subtext py-2">Ders yok.</p>
+                    )}
+                </div>
+            </div>
+
+            {/* MODAL: Attendance */}
+            {activeLessonModal === 'attendance' && selectedLesson && (
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white w-full sm:w-[400px] rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl animate-slide-up pb-10 sm:pb-6">
+                        <h3 className="text-xl font-bold mb-2 text-center">{selectedLesson.student.name}</h3>
+                        <p className="text-center text-ios-subtext mb-8">{selectedLesson.time} Dersi Başlasın mı?</p>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <button
+                                onClick={() => handleAttendance(false)}
+                                className="bg-red-50 text-red-500 font-semibold py-4 rounded-xl active:scale-95 transition-transform"
+                            >
+                                Gelmedi ❌
+                            </button>
+                            <button
+                                onClick={() => handleAttendance(true)}
+                                className="bg-ios-blue text-white font-semibold py-4 rounded-xl active:scale-95 transition-transform shadow-lg shadow-blue-200"
+                            >
+                                Geldi ✅
+                            </button>
+                        </div>
+                        <button onClick={() => setActiveLessonModal(null)} className="mt-6 w-full text-ios-subtext text-sm">Vazgeç</button>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL: Lesson Details (End) */}
+            {activeLessonModal === 'details' && selectedLesson && (
+                <LessonEndModal
+                    lesson={selectedLesson}
+                    student={selectedLesson.student}
+                    onComplete={handleCompleteLesson}
+                    onCancel={() => setActiveLessonModal(null)}
+                />
+            )}
+
+
+        </div>
+    );
+}
+
+function LessonEndModal({ lesson, student, onComplete, onCancel }) {
+    const [topic, setTopic] = useState('');
+    const [homework, setHomework] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState(student.balance >= student.feePerLesson ? 'balance' : 'debt');
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
+            <div className="bg-ios-bg w-full sm:w-[400px] rounded-t-2xl sm:rounded-2xl h-[90vh] sm:h-auto overflow-y-auto animate-slide-up flex flex-col">
+                <div className="p-4 bg-white border-b border-ios-separator sticky top-0 flex justify-between items-center rounded-t-2xl">
+                    <h3 className="font-semibold">Dersi Tamamla</h3>
+                    <button onClick={onCancel} className="text-ios-blue">Kapat</button>
+                </div>
+
+                <div className="p-4 space-y-6 flex-1">
+                    {/* Topic & HW */}
+                    <div className="bg-white rounded-xl p-4 shadow-sm space-y-4">
+                        <div>
+                            <label className="block text-xs uppercase text-ios-subtext font-semibold mb-1">İşlenen Konu</label>
+                            <input
+                                value={topic} onChange={e => setTopic(e.target.value)}
+                                className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-ios-blue transition-colors" placeholder="Bugün ne çalıştınız?"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs uppercase text-ios-subtext font-semibold mb-1">Verilen Ödev</label>
+                            <textarea
+                                value={homework} onChange={e => setHomework(e.target.value)}
+                                className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-ios-blue transition-colors h-20 resize-none" placeholder="Haftaya ne çalışmalı?"
+                            />
+                        </div>
+                        {/* Quick Tags (Mock) */}
+
+                    </div>
+
+                    {/* Payment Info */}
+                    <div>
+                        <label className="block text-xs uppercase text-ios-subtext font-semibold mb-2 ml-2">Ödeme Durumu</label>
+                        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                            {student.balance >= student.feePerLesson ? (
+                                <div
+                                    onClick={() => setPaymentMethod('balance')}
+                                    className={`p-4 flex items-center justify-between border-b cursor-pointer ${paymentMethod === 'balance' ? 'bg-blue-50' : ''}`}
+                                >
+                                    <div>
+                                        <div className="font-semibold">Bakiyeden Düş ({student.balance}₺)</div>
+                                        <div className="text-xs text-ios-subtext">Yeni Bakiye: {student.balance - student.feePerLesson}₺</div>
+                                    </div>
+                                    {paymentMethod === 'balance' && <span className="text-ios-blue">✓</span>}
+                                </div>
+                            ) : (
+                                <div className="p-4 bg-orange-50 text-orange-800 text-sm">
+                                    Bakiye yetersiz! ({student.balance}₺)
+                                </div>
+                            )}
+
+                            <div
+                                onClick={() => setPaymentMethod('cash')}
+                                className={`p-4 flex items-center justify-between border-b cursor-pointer ${paymentMethod === 'cash' ? 'bg-blue-50' : ''}`}
+                            >
+                                <div className="font-semibold">Nakit Alındı</div>
+                                {paymentMethod === 'cash' && <span className="text-ios-blue">✓</span>}
+                            </div>
+
+                            <div
+                                onClick={() => setPaymentMethod('debt')}
+                                className={`p-4 flex items-center justify-between cursor-pointer ${paymentMethod === 'debt' ? 'bg-blue-50' : ''}`}
+                            >
+                                <div>
+                                    <div className="font-semibold">Borç Yaz</div>
+                                    <div className="text-xs text-ios-subtext">Bakiyeye -{student.feePerLesson}₺ yansır</div>
+                                </div>
+                                {paymentMethod === 'debt' && <span className="text-ios-blue">✓</span>}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="p-4 bg-white border-t border-ios-separator safe-area-bottom">
+                    <button
+                        onClick={() => onComplete(topic, homework, paymentMethod)}
+                        className="w-full bg-ios-blue text-white font-bold py-3 rounded-xl shadow-ios active:scale-95 transition-transform"
+                    >
+                        Dersi Bitir ve Kaydet
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function LessonDetailsModal({ lesson, onClose, onComplete, students }) {
+    const [topic, setTopic] = useState('');
+    const [homework, setHomework] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState('debt');
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-end pointer-events-none">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in pointer-events-auto" onClick={onClose}></div>
+            <div className="bg-white w-full rounded-t-2xl shadow-2xl animate-slide-up pointer-events-auto max-h-[85vh] flex flex-col relative z-10 safe-area-bottom">
+                <div className="p-4 border-b border-ios-separator flex justify-between items-center">
+                    <span className="font-semibold text-lg">{lesson.student?.name}</span>
+                    <button onClick={onClose} className="text-gray-400 bg-gray-100 p-1 rounded-full"><div className="w-6 h-6 flex items-center justify-center">✕</div></button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Konu</label>
+                        <input
+                            type="text"
+                            value={topic}
+                            onChange={(e) => setTopic(e.target.value)}
+                            placeholder="Majör Gamlar..."
+                            className="w-full bg-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ios-blue/20"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Ödev</label>
+                        <textarea
+                            value={homework}
+                            onChange={(e) => setHomework(e.target.value)}
+                            placeholder="C Majör çalış..."
+                            rows={3}
+                            className="w-full bg-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ios-blue/20"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">Ödeme Şekli</label>
+                        <div className="bg-ios-card rounded-xl shadow-ios overflow-hidden divide-y divide-gray-100">
+                            <div
+                                onClick={() => setPaymentMethod('debt')}
+                                className="p-4 flex justify-between items-center active:bg-gray-50 cursor-pointer"
+                            >
+                                <div>
+                                    <div className="font-semibold text-[17px]">Borca Ekle</div>
+                                    <div className="text-xs text-gray-500 mt-0.5">Öğrenci bakiyesine eklensin</div>
+                                </div>
+                                {paymentMethod === 'debt' && <span className="text-ios-blue">✓</span>}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="p-4 bg-white border-t border-ios-separator safe-area-bottom">
+                    <button
+                        onClick={() => onComplete(topic, homework, paymentMethod)}
+                        className="w-full bg-ios-blue text-white font-bold py-3 rounded-xl shadow-ios active:scale-95 transition-transform"
+                    >
+                        Dersi Bitir ve Kaydet
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+
