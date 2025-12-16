@@ -10,7 +10,11 @@ export default function Dashboard({ showToast }) {
     const [activeLessonModal, setActiveLessonModal] = useState(null); // 'attendance' | 'details' | null
     const [selectedLesson, setSelectedLesson] = useState(null); // The lesson object being acted upon
 
-    const upcomingLessons = lessons.filter(l => (l.status === 'upcoming' || l.status === 'scheduled' || l.status === 'started'));
+    const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format regardless of locale
+    const upcomingLessons = lessons.filter(l =>
+        l.date === todayStr &&
+        (l.status === 'upcoming' || l.status === 'scheduled' || l.status === 'started')
+    );
     const today = new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
 
     // Sort by Date AND Time

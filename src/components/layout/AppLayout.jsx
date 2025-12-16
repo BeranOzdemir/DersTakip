@@ -2,7 +2,7 @@ import React from 'react';
 import { Home, Users, Calendar, Wallet, Settings } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
-export default function AppLayout({ children, activeTab, onTabChange }) {
+export default function AppLayout({ children, activeTab, onTabChange, hideTabBar }) {
     const tabs = [
         { id: 'dashboard', label: 'Özet', icon: Home },
         { id: 'students', label: 'Öğrenciler', icon: Users },
@@ -24,43 +24,45 @@ export default function AppLayout({ children, activeTab, onTabChange }) {
             </main>
 
             {/* Bottom Navigation */}
-            <div className="absolute bottom-0 left-0 right-0 z-50">
-                {/* Blur Container */}
-                <div className="absolute inset-0 bg-white/80 backdrop-blur-xl border-t border-ios-separator"></div>
+            {!hideTabBar && (
+                <div className="absolute bottom-0 left-0 right-0 z-50">
+                    {/* Blur Container */}
+                    <div className="absolute inset-0 bg-white/80 backdrop-blur-xl border-t border-ios-separator"></div>
 
-                {/* Safe Area Spacer */}
-                <div className="safe-area-bottom bg-transparent relative z-10">
-                    <nav className="flex items-center justify-around h-[49px] pb-1">
-                        {tabs.map((tab) => {
-                            const Icon = tab.icon;
-                            const isActive = activeTab === tab.id;
+                    {/* Safe Area Spacer */}
+                    <div className="safe-area-bottom bg-transparent relative z-10">
+                        <nav className="flex items-center justify-around h-[56px] pb-1">
+                            {tabs.map((tab) => {
+                                const Icon = tab.icon;
+                                const isActive = activeTab === tab.id;
 
-                            return (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => onTabChange(tab.id)}
-                                    className="flex flex-col items-center justify-center w-full h-full active:opacity-50 transition-opacity"
-                                >
-                                    <Icon
-                                        size={24}
-                                        strokeWidth={isActive ? 2.5 : 2}
-                                        className={cn(
-                                            "mb-[2px] transition-colors duration-200",
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => onTabChange(tab.id)}
+                                        className="flex flex-col items-center justify-center w-full h-full active:opacity-50 transition-opacity"
+                                    >
+                                        <Icon
+                                            size={28}
+                                            strokeWidth={isActive ? 2.5 : 2}
+                                            className={cn(
+                                                "mb-[3px] transition-colors duration-200",
+                                                isActive ? "text-ios-blue" : "text-ios-subtext"
+                                            )}
+                                        />
+                                        <span className={cn(
+                                            "text-[11px] font-medium transition-colors duration-200",
                                             isActive ? "text-ios-blue" : "text-ios-subtext"
-                                        )}
-                                    />
-                                    <span className={cn(
-                                        "text-[10px] font-medium transition-colors duration-200",
-                                        isActive ? "text-ios-blue" : "text-ios-subtext"
-                                    )}>
-                                        {tab.label}
-                                    </span>
-                                </button>
-                            );
-                        })}
-                    </nav>
+                                        )}>
+                                            {tab.label}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </nav>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
