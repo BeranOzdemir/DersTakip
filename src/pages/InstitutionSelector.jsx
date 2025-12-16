@@ -41,7 +41,7 @@ export default function InstitutionSelector({ showToast, onResetGlobalSafe, onWi
 
     const handleAdd = () => {
         if (!newInstName) return;
-        onAdd(newInstName, newInstPhoto);
+        onAddInstitution(newInstName, newInstPhoto);
         setIsAddModalOpen(false);
         setNewInstName('');
         setNewInstPhoto(null);
@@ -96,7 +96,7 @@ export default function InstitutionSelector({ showToast, onResetGlobalSafe, onWi
                 {institutions.map(inst => (
                     <button
                         key={inst.id}
-                        onClick={() => onSelect(inst.id)}
+                        onClick={() => onSelectInstitution(inst.id)}
                         className="w-full bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between group active:scale-[0.98] transition-all"
                     >
                         <div className="flex items-center gap-4">
