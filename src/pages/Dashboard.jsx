@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { parse, differenceInMinutes } from 'date-fns';
 import { getAvatarColor } from '../lib/avatar';
 import { LayoutGrid } from 'lucide-react';
@@ -17,10 +17,21 @@ export default function Dashboard({ showToast }) {
     const [selectedLesson, setSelectedLesson] = useState(null); // The lesson object being acted upon
 
     const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format regardless of locale
-    const upcomingLessons = lessons.filter(l =>
-        l.date === todayStr &&
-        (l.status === 'upcoming' || l.status === 'scheduled' || l.status === 'started')
-    );
+    const upcomingLessons = useMemo(() => {
+        const filtered = lessons.filter(l =>
+            l.date === todayStr &&
+            (l.status === 'upcoming' || l.status === 'scheduled' || l.status === 'started')
+        );
+
+        // Sort by Date AND Time
+        return filtered.sort((a, b) => {
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            const dateDiff = dateA - dateB;
+            if (dateDiff !== 0) return dateDiff;
+            return a.time.localeCompare(b.time);
+        });
+    }, [lessons, todayStr]);
     const today = new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
 
     useEffect(() => {
@@ -53,14 +64,7 @@ export default function Dashboard({ showToast }) {
         setupNotifications();
     }, [currentUser]);
 
-    // Sort by Date AND Time
-    upcomingLessons.sort((a, b) => {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        const dateDiff = dateA - dateB;
-        if (dateDiff !== 0) return dateDiff;
-        return a.time.localeCompare(b.time);
-    });
+
 
     const nextLesson = upcomingLessons[0];
     const nextLessonStudent = nextLesson ? students.find(s => s.id === nextLesson.studentId) : null;
