@@ -225,25 +225,35 @@ export default function Dashboard({ showToast }) {
                                 const isTime = diffMins <= 10 && diffMins > -30;
 
                                 // DEBUG: Remove this line after verifying
-                                // console.log('Lesson:', nextLesson.time, 'Now:', now.toLocaleTimeString(), 'Diff:', diffMins);
+                                console.log('Lesson:', nextLesson.time, 'Now:', now.toLocaleTimeString(), 'Diff:', diffMins);
 
-                                if ((nextLesson.status === 'upcoming' || nextLesson.status === 'scheduled') && isTime) {
-                                    return (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleLessonCardClick(nextLesson);
-                                            }}
-                                            className="mt-4 w-full bg-white/20 backdrop-blur-md rounded-xl p-3 flex items-center justify-between hover:bg-white/30 transition-colors animate-bounce"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-3 h-3 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]"></div>
-                                                <span className="font-bold text-sm">Ders Vakti! Yoklama Al</span>
-                                            </div>
-                                            <span className="bg-white text-ios-blue text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">Başlat →</span>
-                                        </button>
-                                    );
-                                }
+                                return (
+                                    <>
+                                        {/* DEBUG INFO */}
+                                        <div className="bg-black/80 text-white p-2 rounded text-[10px] mt-2 font-mono">
+                                            Ders: {nextLesson.date} {nextLesson.time}<br />
+                                            Şimdi: {now.toString()}<br />
+                                            Fark: {diffMins.toFixed(2)} dk<br />
+                                            Şart: {diffMins} {"<="} 10 && {diffMins} {">"} -30 ? {isTime ? 'EVET' : 'HAYIR'}
+                                        </div>
+
+                                        {((nextLesson.status === 'upcoming' || nextLesson.status === 'scheduled') && isTime) && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleLessonCardClick(nextLesson);
+                                                }}
+                                                className="mt-4 w-full bg-white/20 backdrop-blur-md rounded-xl p-3 flex items-center justify-between hover:bg-white/30 transition-colors animate-bounce"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-3 h-3 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]"></div>
+                                                    <span className="font-bold text-sm">Ders Vakti! Yoklama Al</span>
+                                                </div>
+                                                <span className="bg-white text-ios-blue text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">Başlat →</span>
+                                            </button>
+                                        )}
+                                    </>
+                                );
                                 return null;
                             })()}
                         </div>
