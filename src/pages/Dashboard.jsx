@@ -33,7 +33,7 @@ export default function Dashboard({ showToast }) {
                     }
 
                     if (permission === 'granted') {
-                        const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY || 'X_NZXmcbi5IHpX95ggJ-PvHQTZsccN2Ljy6agWmP-10';
+                        const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY || 'BOTWYjrOU0ttyHclevgHjMrCTOxjKFvKoWmypk-I_Chz0eWbxLCJZZRPWJHnkqR2vN3caLgrKvgBvXg9LzwYRJ4';
                         if (vapidKey) {
                             const token = await getToken(messaging, { vapidKey });
                             if (token) {
