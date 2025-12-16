@@ -2,10 +2,32 @@ import React from 'react';
 import { useInstitution } from '../contexts';
 import { TrendingUp, TrendingDown, Wallet, AlertCircle } from 'lucide-react';
 
-export default function Stats() {
-    const { students, lessons, activeInstitution } = useInstitution();
+export default function Stats({ showToast }) {
+    const { students, lessons, activeInstitution, cash, handleTransferToGlobalSafe, updateActiveInstitution } = useInstitution();
+    const [isTransferModalOpen, setIsTransferModalOpen] = React.useState(false);
+    const [transferAmount, setTransferAmount] = React.useState('');
+    const [isCollectModalOpen, setIsCollectModalOpen] = React.useState(false);
 
-    // 1. Calculate Monthly Stats
+    // 1. Transfer Logic
+    const onTransfer = () => {
+        const amount = parseFloat(transferAmount);
+        if (isNaN(amount) || amount <= 0) {
+            showToast('Geçerli bir tutar girin', 'error');
+            return;
+        }
+        if (amount > cash) {
+            showToast('Yetersiz bakiye', 'error');
+            return;
+        }
+
+        handleTransferToGlobalSafe(amount);
+        showToast(`${amount}₺ genel kasaya aktarıldı`, 'success');
+        setIsTransferModalOpen(false);
+        setTransferAmount('');
+    }
+
+    // ... (Existing calculation logic) ...
+
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
 
@@ -37,6 +59,56 @@ export default function Stats() {
         <div className="pb-20 pt-2 space-y-6">
             <h1 className="text-[34px] font-bold tracking-tight px-2">Finans</h1>
 
+            {/* Institution Safe Card */}
+            <div className="mx-2 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 text-white shadow-xl shadow-gray-200 overflow-hidden relative">
+                <div className="absolute -right-6 -top-6 text-white/5">
+                    <Wallet size={160} />
+                </div>
+                <div className="relative z-10">
+                    <div className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">KURUM KASASI</div>
+                    <div className="text-4xl font-bold tracking-tight mb-6">{cash}₺</div>
+
+                    <button
+                        onClick={() => setIsTransferModalOpen(true)}
+                        className="bg-white/10 hover:bg-white/20 active:scale-95 backdrop-blur-md border border-white/10 text-white pl-4 pr-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 group"
+                    >
+                        Genel Kasaya Aktar
+                        <span className="group-hover:translate-x-1 transition-transform">→</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Transfer Modal */}
+            {isTransferModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" style={{ zIndex: 9999 }}>
+                    <div className="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-scale-in">
+                        <h3 className="text-lg font-bold mb-1 text-center">Kasaya Aktar</h3>
+                        <p className="text-center text-gray-500 text-sm mb-6">Genel cüzdanınıza ne kadar aktarmak istersiniz?</p>
+
+                        <div className="mb-6">
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-lg">₺</span>
+                                <input
+                                    type="number" autoFocus
+                                    value={transferAmount}
+                                    onChange={e => setTransferAmount(e.target.value)}
+                                    className="w-full bg-gray-100 rounded-2xl py-4 pl-10 pr-4 font-bold text-2xl text-center outline-none focus:ring-2 focus:ring-gray-900/10 transition-all text-gray-900 placeholder:text-gray-300"
+                                    placeholder="0"
+                                />
+                            </div>
+                            <div className="flex justify-center mt-3">
+                                <button onClick={() => setTransferAmount(cash)} className="text-xs text-ios-blue font-semibold px-3 py-1.5 bg-blue-50 rounded-lg active:scale-95 transition-transform">Tümü ({cash}₺)</button>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <button onClick={() => setIsTransferModalOpen(false)} className="py-3.5 text-gray-500 font-semibold bg-gray-100 rounded-xl active:scale-95 transition-transform">Vazgeç</button>
+                            <button onClick={onTransfer} className="py-3.5 text-white font-semibold bg-gray-900 rounded-xl shadow-lg shadow-gray-200 active:scale-95 transition-transform">Aktar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Income Summary Cards */}
             <div className="grid grid-cols-2 gap-4 px-2">
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
@@ -58,19 +130,96 @@ export default function Stats() {
                 </div>
             </div>
 
-            {/* Total Debt Banner */}
-            <div className="mx-2 bg-red-50 p-4 rounded-2xl border border-red-100 flex justify-between items-center">
-                <div>
+            {/* Total Debt Banner with Action */}
+            <div className="mx-2 bg-red-50 p-4 rounded-2xl border border-red-100 flex justify-between items-center relative overflow-hidden">
+                <div className="relative z-10">
                     <div className="flex items-center gap-2 text-red-600 mb-1">
                         <TrendingDown size={18} />
                         <span className="font-semibold text-sm">Toplam Alacak</span>
                     </div>
                     <div className="text-3xl font-bold text-red-700">{totalDebt}₺</div>
                 </div>
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-500">
-                    <AlertCircle size={24} />
+
+                <div className="flex items-center gap-3 relative z-10">
+                    {totalDebt > 0 && (
+                        <button
+                            onClick={() => setIsCollectModalOpen(true)}
+                            className="bg-white text-red-600 border border-red-200 shadow-sm px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-transform"
+                        >
+                            Hepsini Tahsil Et
+                        </button>
+                    )}
+                    <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-500">
+                        <AlertCircle size={24} />
+                    </div>
                 </div>
             </div>
+
+            {/* Collect Confirm Modal */}
+            {isCollectModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" style={{ zIndex: 9999 }}>
+                    <div className="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-scale-in">
+                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
+                            <Wallet size={24} />
+                        </div>
+                        <h3 className="text-lg font-bold mb-2 text-center text-gray-900">Tüm Alacakları Tahsil Et?</h3>
+                        <p className="text-center text-gray-500 text-sm mb-6">
+                            Toplam <span className="font-bold text-gray-900">{totalDebt}₺</span> tutarındaki tüm borçlar "tahsil edildi" olarak işaretlenecek ve kasa bakiyesine eklenecek.
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <button onClick={() => setIsCollectModalOpen(false)} className="py-3.5 text-gray-500 font-semibold bg-gray-100 rounded-xl active:scale-95 transition-transform">Vazgeç</button>
+                            <button
+                                onClick={() => {
+                                    const now = new Date();
+                                    const date = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+                                    const time = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+                                    let totalCollected = 0;
+                                    const newTxList = [];
+
+                                    const updatedStudents = students.map(s => {
+                                        if (s.balance < 0) {
+                                            const amount = Math.abs(s.balance);
+                                            totalCollected += amount;
+
+                                            // Using a simple ID generator since uuid might not be imported
+                                            const txId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+
+                                            newTxList.push({
+                                                id: txId,
+                                                type: 'wallet_load',
+                                                description: `Toplu Tahsilat: ${s.name}`,
+                                                amount: amount,
+                                                date,
+                                                time
+                                            });
+                                            return { ...s, balance: 0 };
+                                        }
+                                        return s;
+                                    });
+
+                                    if (totalCollected > 0) {
+                                        updateActiveInstitution({
+                                            students: updatedStudents,
+                                            cash: cash + totalCollected,
+                                            transactions: [...activeInstitution.transactions, ...newTxList]
+                                        });
+                                        showToast(`${totalCollected}₺ başarıyla tahsil edildi`, 'success');
+                                    } else {
+                                        showToast('Tahsil edilecek borç bulunamadı', 'info');
+                                    }
+
+                                    setIsCollectModalOpen(false);
+                                }}
+                                className="py-3.5 text-white font-semibold bg-red-600 rounded-xl shadow-lg shadow-red-200 active:scale-95 transition-transform"
+                            >
+                                Onayla
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Debtor List */}
             <div className="px-2">
