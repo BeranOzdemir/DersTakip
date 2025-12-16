@@ -214,14 +214,13 @@ export default function Dashboard({ showToast }) {
                             <div className="text-2xl font-medium mt-2">{nextLessonStudent.name}</div>
 
                             {(() => {
-                                const lessonDate = new Date(nextLesson.date);
-                                const [hours, mins] = nextLesson.time.split(':');
-                                lessonDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
+                                // Create Date from combined string to ensure Local Time consistency
+                                const lessonDate = new Date(`${nextLesson.date}T${nextLesson.time}:00`);
                                 const now = new Date();
-                                const diffMins = (lessonDate - now) / (1000 * 60);
+                                const diffMins = (lessonDate - now) / 1000 / 60; // minutes
 
-                                // Show if within 10 mins OR if late (negative diff)
-                                const isTime = diffMins <= 10;
+                                // Show if within 10 mins BEFORE start, and up to 30 mins AFTER start
+                                const isTime = diffMins <= 10 && diffMins > -30;
 
                                 if ((nextLesson.status === 'upcoming' || nextLesson.status === 'scheduled') && isTime) {
                                     return (
