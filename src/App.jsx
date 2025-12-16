@@ -44,7 +44,7 @@ function AppContent() {
     setCash,
     setTransactions,
     updateActiveInstitution,
-    switchInstitution: setActiveInstitutionId,
+    switchInstitution,
     addInstitution,
     updateInstitution,
     deleteInstitution,
