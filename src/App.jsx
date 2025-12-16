@@ -63,6 +63,14 @@ const TabSkeleton = ({ tab }) => {
 };
 
 function AppContent() {
+  // Theme Initialization
+  React.useEffect(() => {
+    const savedTheme = localStorage.getItem('themeColor');
+    if (savedTheme) {
+      document.documentElement.style.setProperty('--ios-blue', savedTheme);
+    }
+  }, []);
+
   // Get state from contexts
   const {
     currentUser,
@@ -77,6 +85,8 @@ function AppContent() {
     handleLogout,
     isUserLoadedFromDB
   } = useAuth();
+
+  const [studentDetailTab, setStudentDetailTab] = useState('info'); // 'info' | 'notes'
 
   const {
     institutions,
@@ -363,55 +373,124 @@ function AppContent() {
                 </button>
               </div>
 
-              <div className="bg-ios-card rounded-xl shadow-ios overflow-hidden mb-6">
-                <div className="p-4 border-b border-ios-separator flex justify-between items-center active:bg-gray-50">
-                  <a href={`tel:${realStudent.phone}`} className="text-ios-blue text-right">{realStudent.phone}</a>
-                </div>
-                <div className="p-4 border-b border-ios-separator flex justify-between items-center active:bg-gray-50">
-                  <span className="text-ios-text">Ders Ücreti</span>
-                  <span className="text-gray-900">{realStudent.feePerLesson}₺</span>
-                </div>
-                <div className="p-4 flex justify-between items-center border-b border-ios-separator">
-                  <span className="text-ios-text">Bakiye</span>
-                  <span className={realStudent.balance !== 0 ? (realStudent.balance > 0 ? "text-ios-green" : "text-ios-red") : "text-ios-subtext"}>
-                    {realStudent.balance}₺
-                  </span>
-                </div>
-                <div className="p-4 flex justify-between items-center active:bg-gray-50">
-                  <span className="text-ios-text">Geçmiş Dersler</span>
-                  {/* <span className="text-ios-subtext text-sm">❯</span> */}
-                </div>
-                <div className="divide-y divide-ios-separator bg-gray-50">
-                  {(() => {
-                    const history = lessons
-                      .filter(l => l.studentId === realStudent.id && (l.status === 'completed' || l.status === 'cancelled'))
-                      .sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time))
-                      .slice(0, 3);
-
-                    if (history.length === 0) {
-                      return <div className="p-4 text-center text-gray-400 text-sm">Geçmiş ders kaydı yok.</div>;
-                    }
-
-                    return history.map(lesson => (
-                      <div key={lesson.id} className="p-4">
-                        <div className="flex justify-between mb-1">
-                          <span className="font-semibold">{new Date(lesson.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'short' })}</span>
-                          <span className={`text-xs px-2 py-0.5 rounded ${lesson.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                            {lesson.status === 'completed' ? 'Tamamlandı' : 'İptal'}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-800">{lesson.topic || 'Konu girilmedi'}</p>
-                      </div>
-                    ));
-                  })()}
-                  <button
-                    onClick={() => navigateTo('history', realStudent)}
-                    className="w-full p-4 text-center text-sm text-ios-blue font-medium active:opacity-50"
-                  >
-                    Tümünü Gör
-                  </button>
-                </div>
+              {/* Detail Tabs */}
+              <div className="bg-gray-100 p-1 rounded-xl flex mb-6 mx-4">
+                <button onClick={() => setStudentDetailTab('info')} className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-all ${studentDetailTab === 'info' ? 'bg-white shadow-sm text-black' : 'text-gray-500'}`}>Bilgiler</button>
+                <button onClick={() => setStudentDetailTab('notes')} className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-all ${studentDetailTab === 'notes' ? 'bg-white shadow-sm text-black' : 'text-gray-500'}`}>Notlar</button>
               </div>
+
+              {studentDetailTab === 'info' ? (
+                /* Info Tab Content */
+                <div className="bg-ios-card rounded-xl shadow-ios overflow-hidden mb-6 mx-4">
+                  <div className="p-4 border-b border-ios-separator flex justify-between items-center active:bg-gray-50">
+                    <a href={`tel:${realStudent.phone}`} className="text-ios-blue text-right">{realStudent.phone}</a>
+                  </div>
+                  <div className="p-4 border-b border-ios-separator flex justify-between items-center active:bg-gray-50">
+                    <span className="text-ios-text">Ders Ücreti</span>
+                    <span className="text-gray-900">{realStudent.feePerLesson}₺</span>
+                  </div>
+                  <div className="p-4 flex justify-between items-center border-b border-ios-separator">
+                    <span className="text-ios-text">Bakiye</span>
+                    <span className={realStudent.balance !== 0 ? (realStudent.balance > 0 ? "text-ios-green" : "text-ios-red") : "text-ios-subtext"}>
+                      {realStudent.balance}₺
+                    </span>
+                  </div>
+                  <div className="p-4 flex justify-between items-center active:bg-gray-50">
+                    <span className="text-ios-text">Geçmiş Dersler</span>
+                    {/* <span className="text-ios-subtext text-sm">❯</span> */}
+                  </div>
+                  <div className="divide-y divide-ios-separator bg-gray-50">
+                    {(() => {
+                      const history = lessons
+                        .filter(l => l.studentId === realStudent.id && (l.status === 'completed' || l.status === 'cancelled'))
+                        .sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time))
+                        .slice(0, 3);
+
+                      if (history.length === 0) {
+                        return <div className="p-4 text-center text-gray-400 text-sm">Geçmiş ders kaydı yok.</div>;
+                      }
+
+                      return history.map(lesson => (
+                        <div key={lesson.id} className="p-4">
+                          <div className="flex justify-between mb-1">
+                            <span className="font-semibold">{new Date(lesson.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'short' })}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded ${lesson.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                              {lesson.status === 'completed' ? 'Tamamlandı' : 'İptal'}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-800">{lesson.topic || 'Konu girilmedi'}</p>
+                        </div>
+                      ));
+                    })()}
+                    <button
+                      onClick={() => navigateTo('history', realStudent)}
+                      className="w-full p-4 text-center text-sm text-ios-blue font-medium active:opacity-50"
+                    >
+                      Tümünü Gör
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Notes Tab Content */
+                <div className="mx-4 pb-32 animate-fade-in">
+                  {/* Add Note */}
+                  <div className="bg-white p-2 pl-3 rounded-xl shadow-sm border border-gray-100 mb-4 flex gap-2 items-center">
+                    <input id="newNoteInput" type="text" placeholder="Yeni not ekle..." className="flex-1 bg-transparent outline-none text-sm py-2"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const text = e.target.value.trim();
+                          if (!text) return;
+                          const newNote = { id: Date.now().toString(), text, date: new Date().toISOString() };
+                          const updatedNotes = [newNote, ...(realStudent.notes || [])];
+                          const updatedStudent = { ...realStudent, notes: updatedNotes };
+                          const updatedStudentsList = students.map(s => s.id === realStudent.id ? updatedStudent : s);
+                          setStudents(updatedStudentsList); // Optimistic
+                          updateActiveInstitution({ students: updatedStudentsList });
+                          e.target.value = '';
+                        }
+                      }}
+                    />
+                    <button onClick={() => {
+                      const input = document.getElementById('newNoteInput');
+                      const text = input.value.trim();
+                      if (!text) return;
+                      const newNote = { id: Date.now().toString(), text, date: new Date().toISOString() };
+                      const updatedNotes = [newNote, ...(realStudent.notes || [])];
+                      const updatedStudent = { ...realStudent, notes: updatedNotes };
+                      const updatedStudentsList = students.map(s => s.id === realStudent.id ? updatedStudent : s);
+                      setStudents(updatedStudentsList); // Optimistic
+                      updateActiveInstitution({ students: updatedStudentsList });
+                      input.value = '';
+                    }} className="bg-ios-blue text-white p-2 rounded-lg active:scale-95 transition-transform">
+                      <span className="text-xl leading-none">+</span>
+                    </button>
+                  </div>
+
+                  {/* Notes List */}
+                  <div className="space-y-3">
+                    {(!realStudent.notes || realStudent.notes.length === 0) && (
+                      <div className="text-center text-gray-400 text-sm py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                        Henüz not eklenmemiş.
+                      </div>
+                    )}
+                    {realStudent.notes && realStudent.notes.map(note => (
+                      <div key={note.id} className="bg-[#FFF9C4] p-4 rounded-xl shadow-sm border border-yellow-100 relative group transition-all">
+                        <p className="text-gray-800 text-sm mb-2">{note.text}</p>
+                        <div className="flex justify-between items-center text-xs text-gray-400">
+                          <span>{new Date(note.date).toLocaleDateString('tr-TR')}</span>
+                          <button onClick={() => {
+                            const updatedNotes = realStudent.notes.filter(n => n.id !== note.id);
+                            const updatedStudent = { ...realStudent, notes: updatedNotes };
+                            const updatedStudentsList = students.map(s => s.id === realStudent.id ? updatedStudent : s);
+                            setStudents(updatedStudentsList);
+                            updateActiveInstitution({ students: updatedStudentsList });
+                          }} className="text-red-400 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors">Sil</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Add Balance Modal */}
               {activeTab === 'add-balance-modal' && (

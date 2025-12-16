@@ -25,7 +25,7 @@ export default {
                     text: '#000000',
                     subtext: '#8E8E93',
                     separator: '#C6C6C8',
-                    blue: '#007AFF',
+                    blue: 'var(--ios-blue)', // Dynamic Theme Color
                     red: '#FF3B30',
                     green: '#34C759',
                     indigo: '#5856D6',

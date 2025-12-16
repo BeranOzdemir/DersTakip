@@ -168,6 +168,39 @@ export default function Settings({ showToast, onPhotoUpload }) {
                 </>
             )}
 
+            {/* Theme Settings */}
+            <h2 className="text-ios-subtext uppercase text-[13px] mb-2 ml-8">GÖRÜNÜM</h2>
+            <div className="px-4 mb-6">
+                <div className="bg-ios-card rounded-xl shadow-ios p-4">
+                    <div className="flex justify-between items-center mb-4">
+                        <span className="text-[17px]">Tema Rengi</span>
+                    </div>
+                    <div className="flex gap-4 overflow-x-auto pb-1 no-scrollbar justify-start">
+                        {[
+                            { color: '#007AFF', name: 'Mavi' },
+                            { color: '#AF52DE', name: 'Mor' },
+                            { color: '#FF9500', name: 'Turuncu' },
+                            { color: '#FF3B30', name: 'Kırmızı' },
+                            { color: '#34C759', name: 'Yeşil' },
+                            { color: '#1C1C1E', name: 'Siyah' }
+                        ].map((theme) => (
+                            <button
+                                key={theme.color}
+                                onClick={() => {
+                                    document.documentElement.style.setProperty('--ios-blue', theme.color);
+                                    localStorage.setItem('themeColor', theme.color);
+                                    showToast(`Tema değiştirildi.`);
+                                }}
+                                className="w-10 h-10 rounded-full shadow-md active:scale-90 transition-transform border-2 border-white/50 relative group"
+                                style={{ backgroundColor: theme.color }}
+                            >
+                                <div className="absolute inset-0 rounded-full bg-white/0 group-hover:bg-white/10 transition-colors"></div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
             {/* General Settings */}
             <h2 className="text-ios-subtext uppercase text-[13px] mb-2 ml-8">GENEL</h2>
             <div className="px-4 mb-6">
