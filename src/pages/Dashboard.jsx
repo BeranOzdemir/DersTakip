@@ -231,7 +231,14 @@ export default function Dashboard({ showToast }) {
                                 )}
                             </div>
 
-                            <div className="text-2xl font-medium mt-2">{nextLessonStudent.name}</div>
+                            <div className="mt-2">
+                                <div className="text-2xl font-medium">{nextLessonStudent.name}</div>
+                                {nextLessonStudent.instrument && (
+                                    <div className="text-blue-100 text-sm font-medium opacity-90 uppercase tracking-widest mt-0.5">
+                                        {nextLessonStudent.instrument}
+                                    </div>
+                                )}
+                            </div>
 
                             {/* Action Button */}
                             {isNextLessonActionable && nextLesson.status !== 'started' && (
