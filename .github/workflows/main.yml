@@ -1,4 +1,5 @@
-name: Deploy to Firebase Hosting
+name: DersTakip Deploy Sistemi
+run-name: ${{ github.actor }} yeni güncelleme deploy ediyor 🚀 - ${{ github.event.head_commit.message }}
 on:
   push:
     branches:
