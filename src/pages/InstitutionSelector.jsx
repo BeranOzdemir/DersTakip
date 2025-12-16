@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useInstitution } from '../contexts/InstitutionContext';
 
 export default function InstitutionSelector({ showToast, onResetGlobalSafe, onWithdrawFromGlobalSafe }) {
-    const { globalCash, globalTransactions } = useAuth();
+    const { user, globalCash, globalTransactions } = useAuth();
     const { institutions, switchInstitution: onSelectInstitution, addInstitution: onAddInstitution } = useInstitution();
 
     const totalStudents = institutions.reduce((acc, inst) => acc + (inst.students?.length || 0), 0);
