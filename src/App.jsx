@@ -482,8 +482,8 @@ function AppContent() {
 
       if (screen === 'add-student') {
         return (
-          <div className="bg-ios-bg min-h-screen pt-safe-top animate-slide-up">
-            <div className="p-4 flex justify-between items-center bg-white/80 backdrop-blur-md border-b border-ios-separator sticky top-0 z-10">
+          <div className="fixed inset-0 z-[60] bg-ios-bg flex flex-col pt-safe-top animate-slide-up">
+            <div className="flex-none p-4 flex justify-between items-center bg-white/80 backdrop-blur-md border-b border-ios-separator sticky top-0 z-10">
               <button onClick={() => { setTempData({}); goBack(); }} className="text-ios-blue text-[17px] active:opacity-50">Vazgeç</button>
               <span className="font-semibold">Yeni Öğrenci</span>
               <button onClick={() => {
@@ -509,7 +509,7 @@ function AppContent() {
                 goBack();
               }} className="text-ios-blue font-bold text-[17px] active:opacity-50">Ekle</button>
             </div>
-            <div className="p-4">
+            <div className="flex-1 overflow-y-auto p-4 pb-48">
               <div className="bg-ios-card rounded-xl shadow-ios overflow-hidden divide-y divide-ios-separator">
                 <div className="px-4 py-3 flex justify-center">
                   <div className="relative">
@@ -549,8 +549,8 @@ function AppContent() {
 
       if (screen === 'edit-student') {
         return (
-          <div className="bg-ios-bg min-h-screen pt-safe-top animate-slide-up">
-            <div className="p-4 flex justify-between items-center bg-white/80 backdrop-blur-md border-b border-ios-separator sticky top-0 z-10">
+          <div className="fixed inset-0 z-[60] bg-ios-bg flex flex-col pt-safe-top animate-slide-up">
+            <div className="flex-none p-4 flex justify-between items-center bg-white/80 backdrop-blur-md border-b border-ios-separator sticky top-0 z-10">
               <button onClick={goBack} className="text-ios-blue text-[17px] active:opacity-50">Vazgeç</button>
               <span className="font-semibold">Düzenle</span>
               <button onClick={() => {
@@ -579,7 +579,7 @@ function AppContent() {
 
               }} className="text-ios-blue font-bold text-[17px] active:opacity-50">Kaydet</button>
             </div>
-            <div className="p-4">
+            <div className="flex-1 overflow-y-auto p-4 pb-48">
               <div className="bg-ios-card rounded-xl shadow-ios overflow-hidden divide-y divide-ios-separator">
                 <div className="px-4 py-3 flex justify-center">
                   <div className="relative">
