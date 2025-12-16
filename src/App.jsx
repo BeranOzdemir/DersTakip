@@ -30,7 +30,8 @@ function AppContent() {
     setGlobalTransactions,
     isAuthenticated,
     isAuthLoading,
-    handleLogout
+    handleLogout,
+    isUserLoadedFromDB
   } = useAuth();
 
   const {
@@ -60,6 +61,14 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [navigationStack, setNavigationStack] = useState([]);
   const [isProfileComplete, setIsProfileComplete] = useState(() => localStorage.getItem('isProfileComplete') === 'true');
+
+  // Check profile completion from DB
+  React.useEffect(() => {
+    if (isUserLoadedFromDB && user.name && user.name !== 'Kullanıcı') {
+      setIsProfileComplete(true);
+      localStorage.setItem('isProfileComplete', 'true');
+    }
+  }, [isUserLoadedFromDB, user.name]);
 
   // Instrument Picker State
   const [isInstrumentPickerOpen, setIsInstrumentPickerOpen] = useState(false);
