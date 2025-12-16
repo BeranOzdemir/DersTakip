@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 // Lazy load page components for code splitting
 const Students = lazy(() => import('./pages/Students'));
 const Schedule = lazy(() => import('./pages/Schedule'));
-const Finance = lazy(() => import('./pages/Finance'));
+const Finance = lazy(() => import('./pages/Stats'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Login = lazy(() => import('./pages/Login'));
 const Settings = lazy(() => import('./pages/Settings'));

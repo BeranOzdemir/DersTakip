@@ -22,16 +22,19 @@ export const InstitutionProvider = ({ children }) => {
     const { currentUser, globalCash, setGlobalCash, globalTransactions, setGlobalTransactions } = useAuth();
     const [institutions, setInstitutions] = useState([]);
     const [activeInstitutionId, setActiveInstitutionId] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     // Firestore Listener for Institutions
     useEffect(() => {
         if (!currentUser) {
             setInstitutions([]);
+            setLoading(false);
             return undefined;
         }
 
         const unsubscribe = subscribeToInstitutions(currentUser.uid, (data) => {
             setInstitutions(data);
+            setLoading(false);
 
             // Initialize default institution if empty
             if (data.length === 0) {
@@ -264,7 +267,8 @@ export const InstitutionProvider = ({ children }) => {
         handleResetActiveInstitution,
         handleTransferToGlobalSafe,
         handleResetGlobalSafe,
-        handleWithdrawFromGlobalSafe
+        handleWithdrawFromGlobalSafe,
+        loading
     };
 
     return (

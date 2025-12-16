@@ -10,7 +10,7 @@ import { saveUserFcmToken } from '../lib/db';
 
 export default function Dashboard({ showToast }) {
     const { currentUser } = useAuth();
-    const { students, lessons, setStudents, setLessons, cash, setCash, institutions, activeInstitution, switchInstitution } = useInstitution();
+    const { students, lessons, setStudents, setLessons, cash, setCash, institutions, activeInstitution, switchInstitution, loading } = useInstitution();
 
     // Local state for modals, but data comes from context
     const [activeLessonModal, setActiveLessonModal] = useState(null); // 'attendance' | 'details' | null
@@ -63,6 +63,29 @@ export default function Dashboard({ showToast }) {
 
         setupNotifications();
     }, [currentUser]);
+
+    if (loading) {
+        return (
+            <div className="pb-20 relative pt-2 animate-pulse">
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <div className="h-8 w-40 bg-gray-200 rounded-lg mb-2"></div>
+                        <div className="h-4 w-24 bg-gray-100 rounded-lg"></div>
+                    </div>
+                    <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                </div>
+                <div className="space-y-6">
+                    <div className="h-80 w-full bg-gray-200 rounded-2xl shadow-sm"></div>
+                    <div className="space-y-3">
+                        <div className="h-6 w-32 bg-gray-200 rounded-lg mb-4"></div>
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="h-20 w-full bg-gray-100 rounded-xl"></div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
 
 
