@@ -1,20 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { useInstitution } from './contexts/InstitutionContext';
 import AppLayout from './components/layout/AppLayout';
 import Toast from './components/ui/Toast';
-import Students from './pages/Students';
 import PhotoCropper from './components/ui/PhotoCropper';
 import { getAvatarColor } from './lib/avatar';
 import { parseAmount, formatDateTime } from './lib/utils';
 import { v4 as uuidv4 } from 'uuid';
-import Schedule from './pages/Schedule';
-import Finance from './pages/Finance';
-import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
-import Settings from './pages/Settings';
-import InstitutionSelector from './pages/InstitutionSelector';
-import ProfileSetup from './pages/ProfileSetup';
+
+// Lazy load page components for code splitting
+const Students = lazy(() => import('./pages/Students'));
+const Schedule = lazy(() => import('./pages/Schedule'));
+const Finance = lazy(() => import('./pages/Finance'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Login = lazy(() => import('./pages/Login'));
+const Settings = lazy(() => import('./pages/Settings'));
+const InstitutionSelector = lazy(() => import('./pages/InstitutionSelector'));
+const ProfileSetup = lazy(() => import('./pages/ProfileSetup'));
 
 function AppContent() {
   // Get state from contexts
@@ -700,7 +702,13 @@ function AppContent() {
   if (!isAuthenticated) {
     return (
       <>
-        <Login onLogin={() => { }} showToast={showToast} />
+        <Suspense fallback={
+          <div className="flex items-center justify-center min-h-screen bg-ios-bg">
+            <div className="w-8 h-8 border-4 border-ios-blue border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        }>
+          <Login onLogin={() => { }} showToast={showToast} />
+        </Suspense>
         <Toast
           message={toast.message}
           type={toast.type}
@@ -714,7 +722,13 @@ function AppContent() {
   if (!isProfileComplete) {
     return (
       <>
-        <ProfileSetup onComplete={() => setIsProfileComplete(true)} showToast={showToast} />
+        <Suspense fallback={
+          <div className="flex items-center justify-center min-h-screen bg-ios-bg">
+            <div className="w-8 h-8 border-4 border-ios-blue border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        }>
+          <ProfileSetup onComplete={() => setIsProfileComplete(true)} showToast={showToast} />
+        </Suspense>
         <Toast
           message={toast.message}
           type={toast.type}
@@ -729,11 +743,17 @@ function AppContent() {
   if (!activeInstitutionId) {
     return (
       <>
-        <InstitutionSelector
-          showToast={showToast}
-          onResetGlobalSafe={handleResetGlobalSafe}
-          onWithdrawFromGlobalSafe={handleWithdrawFromGlobalSafe}
-        />
+        <Suspense fallback={
+          <div className="flex items-center justify-center min-h-screen bg-ios-bg">
+            <div className="w-8 h-8 border-4 border-ios-blue border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        }>
+          <InstitutionSelector
+            showToast={showToast}
+            onResetGlobalSafe={handleResetGlobalSafe}
+            onWithdrawFromGlobalSafe={handleWithdrawFromGlobalSafe}
+          />
+        </Suspense>
         <Toast
           message={toast.message}
           type={toast.type}
@@ -753,7 +773,13 @@ function AppContent() {
           setNavigationStack([]);
         }}
       >
-        {renderContent()}
+        <Suspense fallback={
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="w-8 h-8 border-4 border-ios-blue border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        }>
+          {renderContent()}
+        </Suspense>
       </AppLayout>
 
       {/* Instrument Picker Action Sheet */}
