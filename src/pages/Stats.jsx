@@ -1,6 +1,6 @@
 import React from 'react';
 import { useInstitution } from '../contexts';
-import { TrendingUp, TrendingDown, Wallet, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function Stats({ showToast }) {
     const { students, lessons, activeInstitution, cash, transactions, handleTransferToGlobalSafe, updateActiveInstitution } = useInstitution();
@@ -8,6 +8,8 @@ export default function Stats({ showToast }) {
     const [transferAmount, setTransferAmount] = React.useState('');
     const [isCollectModalOpen, setIsCollectModalOpen] = React.useState(false);
     const [selectedDebtor, setSelectedDebtor] = React.useState(null); // If null, collect all
+    const [isDebtorsOpen, setIsDebtorsOpen] = React.useState(false);
+    const [isTransactionsOpen, setIsTransactionsOpen] = React.useState(false);
 
     // 1. Transfer Logic
     const onTransfer = () => {
@@ -248,48 +250,56 @@ export default function Stats({ showToast }) {
 
             {/* Debtor List */}
             <div className="px-2">
-                <h2 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    Borçlu Listesi
-                    <span className="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-md">{debtors.length}</span>
-                </h2>
+                <button
+                    onClick={() => setIsDebtorsOpen(!isDebtorsOpen)}
+                    className="w-full flex items-center justify-between mb-4 bg-transparent outline-none"
+                >
+                    <h2 className="font-semibold text-lg flex items-center gap-2">
+                        Borçlu Listesi
+                        <span className="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-md">{debtors.length}</span>
+                    </h2>
+                    {isDebtorsOpen ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
+                </button>
 
-                {debtors.length > 0 ? (
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-50 overflow-hidden">
-                        {debtors.map(s => (
-                            <div key={s.id} className="p-4 flex justify-between items-center hover:bg-gray-50 transition-colors">
-                                <div className="flex items-center gap-3">
-                                    {s.photo ? (
-                                        <img src={s.photo} className="w-10 h-10 rounded-full object-cover shadow-sm bg-gray-100" />
-                                    ) : (
-                                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold border border-gray-200">
-                                            {s.name.charAt(0)}
+                {isDebtorsOpen && (
+                    debtors.length > 0 ? (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-50 overflow-hidden animate-fade-in">
+                            {debtors.map(s => (
+                                <div key={s.id} className="p-4 flex justify-between items-center hover:bg-gray-50 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        {s.photo ? (
+                                            <img src={s.photo} className="w-10 h-10 rounded-full object-cover shadow-sm bg-gray-100" />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold border border-gray-200">
+                                                {s.name.charAt(0)}
+                                            </div>
+                                        )}
+                                        <div>
+                                            <div className="font-medium text-gray-900">{s.name}</div>
+                                            {/* Phone link */}
+                                            <a href={`tel:${s.phone}`} className="text-xs text-gray-400 hover:text-ios-blue">
+                                                {s.phone || 'Tel Yok'}
+                                            </a>
                                         </div>
-                                    )}
-                                    <div>
-                                        <div className="font-medium text-gray-900">{s.name}</div>
-                                        {/* Phone link */}
-                                        <a href={`tel:${s.phone}`} className="text-xs text-gray-400 hover:text-ios-blue">
-                                            {s.phone || 'Tel Yok'}
-                                        </a>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="font-bold text-red-600 text-lg">{Math.abs(s.balance)}₺</div>
+                                        <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Borç</div>
+                                        <button
+                                            onClick={() => { setSelectedDebtor(s); setIsCollectModalOpen(true); }}
+                                            className="text-xs bg-red-50 text-red-600 px-2 py-1 rounded-md font-bold active:bg-red-100 transition-colors"
+                                        >
+                                            Tahsil Et
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <div className="font-bold text-red-600 text-lg">{Math.abs(s.balance)}₺</div>
-                                    <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Borç</div>
-                                    <button
-                                        onClick={() => { setSelectedDebtor(s); setIsCollectModalOpen(true); }}
-                                        className="text-xs bg-red-50 text-red-600 px-2 py-1 rounded-md font-bold active:bg-red-100 transition-colors"
-                                    >
-                                        Tahsil Et
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-10 text-gray-400 bg-white rounded-2xl border border-gray-100 border-dashed">
-                        Harika! Kimsenin borcu yok. 🎉
-                    </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-10 text-gray-400 bg-white rounded-2xl border border-gray-100 border-dashed animate-fade-in">
+                            Harika! Kimsenin borcu yok. 🎉
+                        </div>
+                    )
                 )}
             </div>
 
