@@ -155,6 +155,19 @@ export default function Dashboard({ showToast }) {
         }
     };
 
+    const handleListItemClick = (lesson) => {
+        if (!lesson) return;
+        const student = students.find(s => s.id === lesson.studentId);
+        setSelectedLesson({ ...lesson, student });
+        // Only open cancel modal if it's not already cancelled or started?
+        // User wants to cancel from list. 
+        if (lesson.status === 'started') {
+            setActiveLessonModal('details');
+        } else {
+            setActiveLessonModal('cancel_confirm');
+        }
+    };
+
 
 
     const handleAttendance = (isPresent) => {
@@ -365,6 +378,27 @@ export default function Dashboard({ showToast }) {
                         </button>
 
                         <button onClick={() => setActiveLessonModal(null)} className="mt-4 w-full text-ios-subtext text-xs">Vazgeç</button>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL: Cancel Confirm (Simplified for List) */}
+            {activeLessonModal === 'cancel_confirm' && selectedLesson && (
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white w-full sm:w-[400px] rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl animate-slide-up pb-10 sm:pb-6">
+                        <h3 className="text-xl font-bold mb-2 text-center">{selectedLesson.student.name}</h3>
+                        <p className="text-center text-ios-subtext mb-8">{selectedLesson.time} dersi iptal edilsin mi?</p>
+
+                        <button
+                            onClick={handleCancelLesson}
+                            className="w-full py-4 bg-orange-50 text-orange-600 rounded-xl font-bold text-lg active:scale-95 transition-transform mb-3 border border-orange-100"
+                        >
+                            Evet, İptal Et
+                        </button>
+
+                        <button onClick={() => setActiveLessonModal(null)} className="w-full py-3 text-gray-500 font-medium bg-gray-100 rounded-xl active:scale-95 transition-transform">
+                            Vazgeç
+                        </button>
                     </div>
                 </div>
             )}
