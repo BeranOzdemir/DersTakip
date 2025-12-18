@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { format, addDays, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addWeeks, addMonths, parseISO, startOfDay } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { Calendar, Clock, ChevronDown, Repeat, X, Trash2, XCircle, AlertTriangle } from 'lucide-react';
+import { Calendar, Clock, ChevronDown, Repeat, X, Trash2, XCircle, AlertTriangle, Edit } from 'lucide-react';
 import { useInstitution } from '../contexts';
 
 export default function Schedule({ showToast, onNavigate }) {
@@ -11,6 +11,7 @@ export default function Schedule({ showToast, onNavigate }) {
     const [viewMode, setViewMode] = useState('week'); // 'week' | 'month'
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isStudentPickerOpen, setIsStudentPickerOpen] = useState(false);
+    const [editingLesson, setEditingLesson] = useState(null); // NULL if adding, Lesson Object if editing
 
     // Add Lesson Form State
     const [selectedStudentId, setSelectedStudentId] = useState('');
@@ -93,22 +94,40 @@ export default function Schedule({ showToast, onNavigate }) {
         setConfirmAction(null);
     };
 
-    const handleAddLesson = () => {
+    const handleSaveLesson = () => {
         if (!selectedStudentId || !lessonTime || !lessonDate) return;
 
+        // --- EDIT MODE ---
+        if (editingLesson) {
+            const updatedLessons = lessons.map(l => {
+                if (l.id === editingLesson.id) {
+                    return {
+                        ...l,
+                        studentId: parseInt(selectedStudentId),
+                        date: format(parseISO(lessonDate), 'yyyy-MM-dd'),
+                        time: lessonTime,
+                        // Keep other fields same
+                    };
+                }
+                return l;
+            });
+            setLessons(updatedLessons);
+            showToast('Ders güncellendi!');
+            setIsAddModalOpen(false);
+            setEditingLesson(null);
+            resetForm();
+            return;
+        }
+
+        // --- ADD MODE ---
         const newLessons = [];
         let currentDate = parseISO(lessonDate);
         const endDate = isRecurring ? parseISO(recurrenceEndDate) : currentDate;
 
-        // Loop for recurrence
-        // Safety: Limit check to avoid infinite loops if something goes wrong, e.g. 52 weeks max
         let count = 0;
         while ((isRecurring ? currentDate <= endDate : count === 0) && count < 52) {
-
-            // basic overlap check suggestion for future: check if time slot is free
-
             const newLesson = {
-                id: Date.now() + count, // unique id assumption
+                id: Date.now() + count,
                 studentId: parseInt(selectedStudentId),
                 date: format(currentDate, 'yyyy-MM-dd'),
                 time: lessonTime,
@@ -126,11 +145,22 @@ export default function Schedule({ showToast, onNavigate }) {
         setLessons(prev => [...prev, ...newLessons]);
         showToast('Ders planlandı!');
         setIsAddModalOpen(false);
+        resetForm();
+    };
 
-        // Reset form
+    const resetForm = () => {
         setSelectedStudentId('');
-        // Keep simpler fields or reset if needed
         setIsRecurring(false);
+        setEditingLesson(null);
+    };
+
+    const handleEditClick = (lesson) => {
+        setEditingLesson(lesson);
+        setSelectedStudentId(lesson.studentId);
+        setLessonDate(lesson.date);
+        setLessonTime(lesson.time);
+        setIsRecurring(false); // Disable recurring edits for simplicity
+        setIsAddModalOpen(true);
     };
 
     // Helper for generating time options
@@ -258,6 +288,13 @@ export default function Schedule({ showToast, onNavigate }) {
                                     {lesson.status !== 'completed' && lesson.status !== 'cancelled' && (
                                         <>
                                             <button
+                                                onClick={(e) => { e.stopPropagation(); handleEditClick(lesson); }}
+                                                className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-500 active:scale-95 transition-transform"
+                                                title="Dersi Düzenle"
+                                            >
+                                                <Edit size={16} />
+                                            </button>
+                                            <button
                                                 onClick={(e) => { e.stopPropagation(); handleCancelClick(lesson); }}
                                                 className="w-8 h-8 flex items-center justify-center rounded-full bg-orange-50 text-orange-500 active:scale-95 transition-transform"
                                                 title="Dersi İptal Et"
@@ -277,8 +314,8 @@ export default function Schedule({ showToast, onNavigate }) {
                                     </button>
 
                                     <div className={`px-2 py-1 rounded-md text-xs font-bold ${lesson.status === 'completed' ? 'bg-ios-green/10 text-ios-green' :
-                                            lesson.status === 'cancelled' ? 'bg-red-50 text-red-400 hidden' : // Hidden label since we show it under name
-                                                'bg-blue-50 text-ios-blue'
+                                        lesson.status === 'cancelled' ? 'bg-red-50 text-red-400 hidden' : // Hidden label since we show it under name
+                                            'bg-blue-50 text-ios-blue'
                                         }`}>
                                         {lesson.status === 'completed' ? 'Bitti' :
                                             lesson.status === 'cancelled' ? 'İptal' : 'Planlı'}
@@ -321,8 +358,8 @@ export default function Schedule({ showToast, onNavigate }) {
 
                     <div className="bg-white w-full sm:w-[320px] rounded-t-2xl sm:rounded-2xl shadow-2xl animate-slide-up pointer-events-auto flex flex-col p-4 pb-8 relative z-10 max-h-[85vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-6">
-                            <span className="font-semibold text-lg">Ders Ekle</span>
-                            <button onClick={() => setIsAddModalOpen(false)} className="text-gray-400 bg-gray-100 p-1 rounded-full hover:bg-gray-200 transition-colors">
+                            <span className="font-semibold text-lg">{editingLesson ? 'Dersi Düzenle' : 'Ders Ekle'}</span>
+                            <button onClick={() => { setIsAddModalOpen(false); resetForm(); }} className="text-gray-400 bg-gray-100 p-1 rounded-full hover:bg-gray-200 transition-colors">
                                 <X size={20} />
                             </button>
                         </div>
@@ -411,11 +448,11 @@ export default function Schedule({ showToast, onNavigate }) {
                             )}
 
                             <button
-                                onClick={handleAddLesson}
+                                onClick={handleSaveLesson}
                                 disabled={!selectedStudentId || !lessonTime || !lessonDate}
                                 className="w-full bg-ios-blue text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-blue-200 active:scale-95 transition-transform disabled:opacity-50 disabled:scale-100 mt-4"
                             >
-                                {isRecurring ? 'Dersleri Planla' : 'Ekle'}
+                                {editingLesson ? 'Değişiklikleri Kaydet' : isRecurring ? 'Dersleri Planla' : 'Ekle'}
                             </button>
                         </div>
                     </div>
