@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 const Students = lazy(() => import('./pages/Students'));
 const Schedule = lazy(() => import('./pages/Schedule'));
 const Finance = lazy(() => import('./pages/Stats'));
+const Resources = lazy(() => import('./pages/Resources'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Login = lazy(() => import('./pages/Login'));
 const Settings = lazy(() => import('./pages/Settings'));
@@ -40,7 +41,7 @@ const TabSkeleton = ({ tab }) => {
     );
   }
 
-  if (tab === 'students' || tab === 'finance') {
+  if (tab === 'students' || tab === 'finance' || tab === 'resources') {
     return (
       <div className="pt-safe-top px-4 animate-pulse space-y-4">
         <div className="flex justify-between items-center py-4">

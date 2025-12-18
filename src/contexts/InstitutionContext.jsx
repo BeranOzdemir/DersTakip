@@ -43,6 +43,7 @@ export const InstitutionProvider = ({ children }) => {
                     students: [],
                     lessons: [],
                     transactions: [],
+                    resources: [],
                     cash: 0
                 };
                 addInstitutionDB(currentUser.uid, defaultInst);
@@ -57,6 +58,7 @@ export const InstitutionProvider = ({ children }) => {
     const students = activeInstitution?.students || [];
     const lessons = activeInstitution?.lessons || [];
     const transactions = activeInstitution?.transactions || [];
+    const resources = activeInstitution?.resources || [];
     const cash = activeInstitution?.cash || 0;
 
     // Update functions
@@ -100,6 +102,16 @@ export const InstitutionProvider = ({ children }) => {
         updateInstitutionDB(currentUser.uid, activeInstitutionId, { transactions: newTransactions });
     };
 
+    const setResources = (updaterOrValue) => {
+        if (!currentUser || !activeInstitutionId) return;
+
+        const newResources = typeof updaterOrValue === 'function'
+            ? updaterOrValue(resources)
+            : updaterOrValue;
+
+        updateInstitutionDB(currentUser.uid, activeInstitutionId, { resources: newResources });
+    };
+
     const updateActiveInstitution = (updates) => {
         if (!currentUser || !activeInstitutionId) return;
         updateInstitutionDB(currentUser.uid, activeInstitutionId, updates);
@@ -117,7 +129,9 @@ export const InstitutionProvider = ({ children }) => {
             photo,
             students: [],
             lessons: [],
+            lessons: [],
             transactions: [],
+            resources: [],
             cash: 0
         };
 
@@ -147,7 +161,9 @@ export const InstitutionProvider = ({ children }) => {
         updateActiveInstitution({
             students: [],
             lessons: [],
+            lessons: [],
             transactions: [],
+            resources: [],
             cash: 0
         });
     };
@@ -253,12 +269,13 @@ export const InstitutionProvider = ({ children }) => {
         activeInstitution,
         students,
         lessons,
-        transactions,
-        cash,
-        setStudents,
-        setLessons,
-        setCash,
         setTransactions,
+        setResources,
+        students,
+        lessons,
+        transactions,
+        resources,
+        cash,
         updateActiveInstitution,
         switchInstitution,
         addInstitution,
