@@ -305,36 +305,44 @@ export default function Stats({ showToast }) {
 
             {/* Transaction History */}
             <div className="px-2">
-                <h2 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    Son İşlemler
-                    <span className="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-md">{(transactions || []).length}</span>
-                </h2>
+                <button
+                    onClick={() => setIsTransactionsOpen(!isTransactionsOpen)}
+                    className="w-full flex items-center justify-between mb-4 bg-transparent outline-none"
+                >
+                    <h2 className="font-semibold text-lg flex items-center gap-2">
+                        Son İşlemler
+                        <span className="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-md">{(transactions || []).length}</span>
+                    </h2>
+                    {isTransactionsOpen ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
+                </button>
 
-                {(transactions || []).length > 0 ? (
-                    <div className="space-y-3">
-                        {(transactions || []).slice(0, 10).map((tx) => (
-                            <div key={tx.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.amount > 0 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
-                                        }`}>
-                                        {tx.amount > 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                {isTransactionsOpen && (
+                    (transactions || []).length > 0 ? (
+                        <div className="space-y-3 animate-fade-in">
+                            {(transactions || []).slice(0, 10).map((tx) => (
+                                <div key={tx.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.amount > 0 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
+                                            }`}>
+                                            {tx.amount > 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                                        </div>
+                                        <div>
+                                            <div className="font-medium text-gray-900">{tx.description || tx.type}</div>
+                                            <div className="text-xs text-gray-400">{tx.date} • {tx.time}</div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div className="font-medium text-gray-900">{tx.description || tx.type}</div>
-                                        <div className="text-xs text-gray-400">{tx.date} • {tx.time}</div>
+                                    <div className={`font-bold text-lg ${tx.amount > 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                                        {tx.amount > 0 ? '+' : ''}{tx.amount}₺
+
                                     </div>
                                 </div>
-                                <div className={`font-bold text-lg ${tx.amount > 0 ? 'text-green-600' : 'text-gray-900'}`}>
-                                    {tx.amount > 0 ? '+' : ''}{tx.amount}₺
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-10 text-gray-400 bg-white rounded-2xl border border-gray-100 border-dashed">
-                        Henüz işlem kaydı yok.
-                    </div>
-                )}
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-10 text-gray-400 bg-white rounded-2xl border border-gray-100 border-dashed">
+                            Henüz işlem kaydı yok.
+                        </div>
+                    )}
             </div>
         </div>
     );
