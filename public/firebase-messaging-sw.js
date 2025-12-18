@@ -1,13 +1,15 @@
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
+const params = new URLSearchParams(self.location.search);
+
 const firebaseConfig = {
-    apiKey: "AIzaSyDArbCxlkoMz6rhB4Yxo91TrE9-3dEs1do",
-    authDomain: "derstakip-1033.firebaseapp.com",
-    projectId: "derstakip-1033",
-    storageBucket: "derstakip-1033.firebasestorage.app",
-    messagingSenderId: "1000782326910",
-    appId: "1:1000782326910:web:2f869b1e2f1d4a361efc2f"
+    apiKey: params.get('apiKey'),
+    authDomain: params.get('authDomain'),
+    projectId: params.get('projectId'),
+    storageBucket: params.get('storageBucket'),
+    messagingSenderId: params.get('messagingSenderId'),
+    appId: params.get('appId')
 };
 
 try {
