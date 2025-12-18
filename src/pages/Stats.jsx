@@ -342,7 +342,8 @@ export default function Stats({ showToast }) {
                         <div className="text-center py-10 text-gray-400 bg-white rounded-2xl border border-gray-100 border-dashed">
                             Henüz işlem kaydı yok.
                         </div>
-                    )}
+                    ))}
+                )}
             </div>
         </div>
     );
