@@ -343,7 +343,6 @@ export default function Stats({ showToast }) {
                             Henüz işlem kaydı yok.
                         </div>
                     ))}
-                )}
             </div>
         </div>
     );
