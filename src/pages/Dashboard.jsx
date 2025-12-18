@@ -323,7 +323,7 @@ export default function Dashboard({ showToast }) {
                             {upcomingLessons.map(l => (
                                 <div
                                     key={l.id}
-                                    onClick={() => handleLessonCardClick(l)}
+                                    onClick={() => handleListItemClick(l)}
                                     className="flex justify-between items-center border-l-[3px] border-ios-blue pl-3 py-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-r-lg"
                                 >
                                     <div>
