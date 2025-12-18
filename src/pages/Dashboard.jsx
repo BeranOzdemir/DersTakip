@@ -21,7 +21,7 @@ export default function Dashboard({ showToast }) {
         const filtered = lessons.filter(l =>
             l.date === todayStr &&
             l.date === todayStr &&
-            (l.status === 'upcoming' || l.status === 'scheduled' || l.status === 'started' || l.status === 'cancelled')
+            (l.status === 'upcoming' || l.status === 'scheduled' || l.status === 'started' || l.status === 'cancelled' || l.status === 'absent')
         );
 
         // Sort by Date AND Time
@@ -163,10 +163,16 @@ export default function Dashboard({ showToast }) {
             updateLessonStatus(selectedLesson.id, 'started', 'present');
             setActiveLessonModal(null);
         } else {
-            // Mark as cancelled, close
-            updateLessonStatus(selectedLesson.id, 'cancelled', 'absent');
+            // Mark as Absent (Gelmedi) - Status becomes 'absent'
+            updateLessonStatus(selectedLesson.id, 'absent', 'absent');
             setActiveLessonModal(null);
         }
+    };
+
+    const handleCancelLesson = () => {
+        // Mark as Cancelled (İptal) - Status becomes 'cancelled'
+        updateLessonStatus(selectedLesson.id, 'cancelled', 'cancelled');
+        setActiveLessonModal(null);
     };
 
     const handleCompleteLesson = (topic, homework, paymentMethod) => {
@@ -336,22 +342,29 @@ export default function Dashboard({ showToast }) {
                         <h3 className="text-xl font-bold mb-2 text-center">{selectedLesson.student.name}</h3>
                         <p className="text-center text-ios-subtext mb-8">{selectedLesson.time} Dersi Başlasın mı?</p>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-4 mb-4">
                             <button
                                 onClick={() => handleAttendance(false)}
-                                className="bg-red-50 text-red-500 font-semibold py-4 rounded-xl active:scale-95 transition-transform flex flex-col items-center justify-center gap-1"
+                                className="bg-red-50 text-red-600 font-semibold py-4 rounded-xl active:scale-95 transition-transform border border-red-100"
                             >
-                                <span className="text-lg">İptal Et</span>
-                                <span className="text-xs opacity-70">(Gelmedi) ❌</span>
+                                Gelmedi (Yoklama) ❌
                             </button>
                             <button
                                 onClick={() => handleAttendance(true)}
                                 className="bg-ios-blue text-white font-semibold py-4 rounded-xl active:scale-95 transition-transform shadow-lg shadow-blue-200"
                             >
-                                Geldi ✅
+                                Geldi (Başlat) ✅
                             </button>
                         </div>
-                        <button onClick={() => setActiveLessonModal(null)} className="mt-6 w-full text-ios-subtext text-sm">Vazgeç</button>
+
+                        <button
+                            onClick={handleCancelLesson}
+                            className="w-full py-3 bg-gray-100 text-gray-500 rounded-xl font-medium text-sm active:scale-95 transition-transform"
+                        >
+                            Dersi İptal Et (Önceden Haberli) ⚠️
+                        </button>
+
+                        <button onClick={() => setActiveLessonModal(null)} className="mt-4 w-full text-ios-subtext text-xs">Vazgeç</button>
                     </div>
                 </div>
             )}
