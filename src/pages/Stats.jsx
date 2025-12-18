@@ -265,7 +265,11 @@ export default function Stats({ showToast }) {
                     debtors.length > 0 ? (
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-50 overflow-hidden animate-fade-in">
                             {debtors.map(s => (
-                                <div key={s.id} className="p-4 flex justify-between items-center hover:bg-gray-50 transition-colors">
+                                <div
+                                    key={s.id}
+                                    onClick={() => { setSelectedDebtor(s); setIsCollectModalOpen(true); }}
+                                    className="p-4 flex justify-between items-center hover:bg-gray-50 transition-colors cursor-pointer active:scale-[0.98] active:bg-gray-100"
+                                >
                                     <div className="flex items-center gap-3">
                                         {s.photo ? (
                                             <img src={s.photo} className="w-10 h-10 rounded-full object-cover shadow-sm bg-gray-100" />
@@ -276,21 +280,19 @@ export default function Stats({ showToast }) {
                                         )}
                                         <div>
                                             <div className="font-medium text-gray-900">{s.name}</div>
-                                            {/* Phone link */}
-                                            <a href={`tel:${s.phone}`} className="text-xs text-gray-400 hover:text-ios-blue">
+                                            {/* Phone link - stopPropagation to prevent opening modal */}
+                                            <a
+                                                href={`tel:${s.phone}`}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="text-xs text-gray-400 hover:text-ios-blue"
+                                            >
                                                 {s.phone || 'Tel Yok'}
                                             </a>
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <div className="font-bold text-red-600 text-lg">{Math.abs(s.balance)}₺</div>
-                                        <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Borç</div>
-                                        <button
-                                            onClick={() => { setSelectedDebtor(s); setIsCollectModalOpen(true); }}
-                                            className="text-xs bg-red-50 text-red-600 px-2 py-1 rounded-md font-bold active:bg-red-100 transition-colors"
-                                        >
-                                            Tahsil Et
-                                        </button>
+                                        <div className="text-[10px] text-gray-400 uppercase tracking-wide">Borç</div>
                                     </div>
                                 </div>
                             ))}
