@@ -302,7 +302,11 @@ export default function Dashboard({ showToast }) {
                     {upcomingLessons.length > 0 ? (
                         <div className="space-y-3">
                             {upcomingLessons.map(l => (
-                                <div key={l.id} className="flex justify-between items-center border-l-[3px] border-ios-blue pl-3 py-1">
+                                <div
+                                    key={l.id}
+                                    onClick={() => handleLessonCardClick(l)}
+                                    className="flex justify-between items-center border-l-[3px] border-ios-blue pl-3 py-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-r-lg"
+                                >
                                     <div>
                                         <div className="font-medium text-[15px]">{l.time}</div>
                                         <div className="text-xs text-ios-subtext">
@@ -310,8 +314,8 @@ export default function Dashboard({ showToast }) {
                                         </div>
                                     </div>
                                     <span className={`text-xs px-2 py-1 rounded ${l.status === 'started' ? 'bg-green-100 text-green-700' :
-                                            l.status === 'cancelled' ? 'bg-red-50 text-red-500' :
-                                                'bg-blue-50 text-ios-blue'
+                                        l.status === 'cancelled' ? 'bg-red-50 text-red-500' :
+                                            'bg-blue-50 text-ios-blue'
                                         }`}>
                                         {l.status === 'started' ? 'Sürüyor' :
                                             l.status === 'cancelled' ? 'İptal' : 'Planlı'}
@@ -335,9 +339,10 @@ export default function Dashboard({ showToast }) {
                         <div className="grid grid-cols-2 gap-4">
                             <button
                                 onClick={() => handleAttendance(false)}
-                                className="bg-red-50 text-red-500 font-semibold py-4 rounded-xl active:scale-95 transition-transform"
+                                className="bg-red-50 text-red-500 font-semibold py-4 rounded-xl active:scale-95 transition-transform flex flex-col items-center justify-center gap-1"
                             >
-                                Gelmedi ❌
+                                <span className="text-lg">İptal Et</span>
+                                <span className="text-xs opacity-70">(Gelmedi) ❌</span>
                             </button>
                             <button
                                 onClick={() => handleAttendance(true)}
