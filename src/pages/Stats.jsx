@@ -3,10 +3,11 @@ import { useInstitution } from '../contexts';
 import { TrendingUp, TrendingDown, Wallet, AlertCircle } from 'lucide-react';
 
 export default function Stats({ showToast }) {
-    const { students, lessons, activeInstitution, cash, handleTransferToGlobalSafe, updateActiveInstitution } = useInstitution();
+    const { students, lessons, activeInstitution, cash, transactions, handleTransferToGlobalSafe, updateActiveInstitution } = useInstitution();
     const [isTransferModalOpen, setIsTransferModalOpen] = React.useState(false);
     const [transferAmount, setTransferAmount] = React.useState('');
     const [isCollectModalOpen, setIsCollectModalOpen] = React.useState(false);
+    const [selectedDebtor, setSelectedDebtor] = React.useState(null); // If null, collect all
 
     // 1. Transfer Logic
     const onTransfer = () => {
@@ -143,7 +144,7 @@ export default function Stats({ showToast }) {
                 <div className="flex items-center gap-3 relative z-10">
                     {totalDebt > 0 && (
                         <button
-                            onClick={() => setIsCollectModalOpen(true)}
+                            onClick={() => { setSelectedDebtor(null); setIsCollectModalOpen(true); }}
                             className="bg-white text-red-600 border border-red-200 shadow-sm px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-transform"
                         >
                             Hepsini Tahsil Et
@@ -162,9 +163,14 @@ export default function Stats({ showToast }) {
                         <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
                             <Wallet size={24} />
                         </div>
-                        <h3 className="text-lg font-bold mb-2 text-center text-gray-900">Tüm Alacakları Tahsil Et?</h3>
+                        <h3 className="text-lg font-bold mb-2 text-center text-gray-900">
+                            {selectedDebtor ? `${selectedDebtor.name} Tahsilat` : 'Tüm Alacakları Tahsil Et?'}
+                        </h3>
                         <p className="text-center text-gray-500 text-sm mb-6">
-                            Toplam <span className="font-bold text-gray-900">{totalDebt}₺</span> tutarındaki tüm borçlar "tahsil edildi" olarak işaretlenecek ve kasa bakiyesine eklenecek.
+                            {selectedDebtor
+                                ? <><span className="font-bold text-gray-900">{Math.abs(selectedDebtor.balance)}₺</span> tutarındaki borç tahsil edilecek.</>
+                                : <>Toplam <span className="font-bold text-gray-900">{totalDebt}₺</span> tutarındaki tüm borçlar "tahsil edildi" olarak işaretlenecek ve kasa bakiyesine eklenecek.</>
+                            }
                         </p>
 
                         <div className="grid grid-cols-2 gap-3">
@@ -179,13 +185,32 @@ export default function Stats({ showToast }) {
                                     const newTxList = [];
 
                                     const updatedStudents = students.map(s => {
+                                        // Collect Single
+                                        if (selectedDebtor) {
+                                            if (s.id === selectedDebtor.id) {
+                                                const amount = Math.abs(s.balance);
+                                                totalCollected += amount;
+                                                // Tx ID
+                                                const txId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+                                                newTxList.push({
+                                                    id: txId,
+                                                    type: 'wallet_load',
+                                                    description: `Tahsilat: ${s.name}`,
+                                                    amount: amount,
+                                                    date,
+                                                    time
+                                                });
+                                                return { ...s, balance: 0 };
+                                            }
+                                            return s;
+                                        }
+
+                                        // Collect All
                                         if (s.balance < 0) {
                                             const amount = Math.abs(s.balance);
                                             totalCollected += amount;
-
-                                            // Using a simple ID generator since uuid might not be imported
+                                            // Tx ID
                                             const txId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
-
                                             newTxList.push({
                                                 id: txId,
                                                 type: 'wallet_load',
@@ -203,7 +228,7 @@ export default function Stats({ showToast }) {
                                         updateActiveInstitution({
                                             students: updatedStudents,
                                             cash: cash + totalCollected,
-                                            transactions: [...activeInstitution.transactions, ...newTxList]
+                                            transactions: [...newTxList, ...transactions]
                                         });
                                         showToast(`${totalCollected}₺ başarıyla tahsil edildi`, 'success');
                                     } else {
@@ -250,7 +275,13 @@ export default function Stats({ showToast }) {
                                 </div>
                                 <div className="text-right">
                                     <div className="font-bold text-red-600 text-lg">{Math.abs(s.balance)}₺</div>
-                                    <div className="text-[10px] text-gray-400 uppercase tracking-wide">Borç</div>
+                                    <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Borç</div>
+                                    <button
+                                        onClick={() => { setSelectedDebtor(s); setIsCollectModalOpen(true); }}
+                                        className="text-xs bg-red-50 text-red-600 px-2 py-1 rounded-md font-bold active:bg-red-100 transition-colors"
+                                    >
+                                        Tahsil Et
+                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -258,6 +289,40 @@ export default function Stats({ showToast }) {
                 ) : (
                     <div className="text-center py-10 text-gray-400 bg-white rounded-2xl border border-gray-100 border-dashed">
                         Harika! Kimsenin borcu yok. 🎉
+                    </div>
+                )}
+            </div>
+
+            {/* Transaction History */}
+            <div className="px-2">
+                <h2 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    Son İşlemler
+                    <span className="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-md">{(transactions || []).length}</span>
+                </h2>
+
+                {(transactions || []).length > 0 ? (
+                    <div className="space-y-3">
+                        {(transactions || []).slice(0, 10).map((tx) => (
+                            <div key={tx.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.amount > 0 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
+                                        }`}>
+                                        {tx.amount > 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                                    </div>
+                                    <div>
+                                        <div className="font-medium text-gray-900">{tx.description || tx.type}</div>
+                                        <div className="text-xs text-gray-400">{tx.date} • {tx.time}</div>
+                                    </div>
+                                </div>
+                                <div className={`font-bold text-lg ${tx.amount > 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                                    {tx.amount > 0 ? '+' : ''}{tx.amount}₺
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-10 text-gray-400 bg-white rounded-2xl border border-gray-100 border-dashed">
+                        Henüz işlem kaydı yok.
                     </div>
                 )}
             </div>
