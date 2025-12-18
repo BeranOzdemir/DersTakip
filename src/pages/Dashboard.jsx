@@ -20,7 +20,8 @@ export default function Dashboard({ showToast }) {
     const upcomingLessons = useMemo(() => {
         const filtered = lessons.filter(l =>
             l.date === todayStr &&
-            (l.status === 'upcoming' || l.status === 'scheduled' || l.status === 'started')
+            l.date === todayStr &&
+            (l.status === 'upcoming' || l.status === 'scheduled' || l.status === 'started' || l.status === 'cancelled')
         );
 
         // Sort by Date AND Time
@@ -308,8 +309,12 @@ export default function Dashboard({ showToast }) {
                                             {students.find(s => s.id === l.studentId)?.name}
                                         </div>
                                     </div>
-                                    <span className={`text-xs px-2 py-1 rounded ${l.status === 'started' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-ios-blue'}`}>
-                                        {l.status === 'started' ? 'Sürüyor' : 'Planlı'}
+                                    <span className={`text-xs px-2 py-1 rounded ${l.status === 'started' ? 'bg-green-100 text-green-700' :
+                                            l.status === 'cancelled' ? 'bg-red-50 text-red-500' :
+                                                'bg-blue-50 text-ios-blue'
+                                        }`}>
+                                        {l.status === 'started' ? 'Sürüyor' :
+                                            l.status === 'cancelled' ? 'İptal' : 'Planlı'}
                                     </span>
                                 </div>
                             ))}

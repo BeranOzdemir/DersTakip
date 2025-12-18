@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { format, addDays, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addWeeks, addMonths, parseISO, startOfDay } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { Calendar, Clock, ChevronDown, Repeat, X } from 'lucide-react';
+import { Calendar, Clock, ChevronDown, Repeat, X, Trash2, XCircle, AlertTriangle } from 'lucide-react';
 import { useInstitution } from '../contexts';
 
 export default function Schedule({ showToast, onNavigate }) {
@@ -56,6 +56,42 @@ export default function Schedule({ showToast, onNavigate }) {
 
     // Time Picker State
     const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
+
+    // Confirmation Modal State (Delete/Cancel)
+    const [confirmAction, setConfirmAction] = useState(null); // { type: 'delete'|'cancel', lesson: object }
+
+    const handleDeleteClick = (lesson) => {
+        setConfirmAction({ type: 'delete', lesson });
+    };
+
+    const handleCancelClick = (lesson) => {
+        setConfirmAction({ type: 'cancel', lesson });
+    };
+
+    const performDelete = () => {
+        if (!confirmAction?.lesson) return;
+
+        const newLessons = lessons.filter(l => l.id !== confirmAction.lesson.id);
+        setLessons(newLessons);
+
+        showToast('Ders silindi.');
+        setConfirmAction(null);
+    };
+
+    const performCancel = () => {
+        if (!confirmAction?.lesson) return;
+
+        const updatedLessons = lessons.map(l => {
+            if (l.id === confirmAction.lesson.id) {
+                return { ...l, status: 'cancelled', attendance: 'absent' };
+            }
+            return l;
+        });
+
+        setLessons(updatedLessons);
+        showToast('Ders iptal edildi.');
+        setConfirmAction(null);
+    };
 
     const handleAddLesson = () => {
         if (!selectedStudentId || !lessonTime || !lessonDate) return;
@@ -206,16 +242,47 @@ export default function Schedule({ showToast, onNavigate }) {
                 {lessonsForDate.length > 0 ? (
                     <div className="bg-ios-card rounded-xl shadow-ios overflow-hidden divide-y divide-ios-separator">
                         {lessonsForDate.map((lesson) => (
-                            <div key={lesson.id} className="p-4 flex items-center justify-between active:bg-gray-50 transition-colors">
+                            <div key={lesson.id} className={`p-4 flex items-center justify-between active:bg-gray-50 transition-colors ${lesson.status === 'cancelled' ? 'opacity-60 grayscale' : ''}`}>
                                 <div>
-                                    <h3 className="font-semibold text-[17px]">{getStudentName(lesson.studentId)}</h3>
-                                    <p className="text-sm text-ios-subtext">{lesson.time}</p>
+                                    <h3 className={`font-semibold text-[17px] ${lesson.status === 'cancelled' ? 'line-through decoration-gray-400 text-gray-500' : ''}`}>
+                                        {getStudentName(lesson.studentId)}
+                                    </h3>
+                                    <p className="text-sm text-ios-subtext flex items-center gap-2">
+                                        <span>{lesson.time}</span>
+                                        {lesson.status === 'cancelled' && <span className="text-red-500 font-medium text-xs bg-red-50 px-2 py-0.5 rounded">İptal Edildi</span>}
+                                    </p>
                                 </div>
-                                <div className={`px-2 py-1 rounded-md text-xs font-bold ${lesson.status === 'completed'
-                                    ? 'bg-ios-green/10 text-ios-green'
-                                    : 'bg-gray-100 text-gray-500'
-                                    }`}>
-                                    {lesson.status === 'completed' ? 'Tamamlandı' : 'Planlandı'}
+
+                                <div className="flex items-center gap-3">
+                                    {/* Actions for active lessons */}
+                                    {lesson.status !== 'completed' && lesson.status !== 'cancelled' && (
+                                        <>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleCancelClick(lesson); }}
+                                                className="w-8 h-8 flex items-center justify-center rounded-full bg-orange-50 text-orange-500 active:scale-95 transition-transform"
+                                                title="Dersi İptal Et"
+                                            >
+                                                <XCircle size={18} />
+                                            </button>
+                                        </>
+                                    )}
+
+                                    {/* Delete is always available, or maybe only for non-completed? Let's allow always for cleanup. */}
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleDeleteClick(lesson); }}
+                                        className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-500 active:scale-95 transition-transform"
+                                        title="Dersi Sil"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+
+                                    <div className={`px-2 py-1 rounded-md text-xs font-bold ${lesson.status === 'completed' ? 'bg-ios-green/10 text-ios-green' :
+                                            lesson.status === 'cancelled' ? 'bg-red-50 text-red-400 hidden' : // Hidden label since we show it under name
+                                                'bg-blue-50 text-ios-blue'
+                                        }`}>
+                                        {lesson.status === 'completed' ? 'Bitti' :
+                                            lesson.status === 'cancelled' ? 'İptal' : 'Planlı'}
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -494,6 +561,44 @@ export default function Schedule({ showToast, onNavigate }) {
                                     {student.name}
                                 </button>
                             ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirmation Modal */}
+            {confirmAction && (
+                <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setConfirmAction(null)}></div>
+                    <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 relative z-10 animate-scale-in">
+                        <div className="w-12 h-12 rounded-full bg-red-100 text-red-500 flex items-center justify-center mx-auto mb-4">
+                            <AlertTriangle size={28} />
+                        </div>
+
+                        <h3 className="text-xl font-bold text-center mb-2">
+                            {confirmAction.type === 'delete' ? 'Dersi Sil' : 'Dersi İptal Et'}
+                        </h3>
+
+                        <p className="text-center text-gray-500 mb-6">
+                            {confirmAction.type === 'delete'
+                                ? 'Bu ders kalıcı olarak silinecek. Bu işlem geri alınamaz.'
+                                : 'Bu ders iptal olarak işaretlenecek ve listede gri renkte görünecek.'}
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                onClick={() => setConfirmAction(null)}
+                                className="py-3 px-4 rounded-xl bg-gray-100 text-gray-700 font-semibold active:scale-95 transition-transform"
+                            >
+                                Vazgeç
+                            </button>
+                            <button
+                                onClick={confirmAction.type === 'delete' ? performDelete : performCancel}
+                                className={`py-3 px-4 rounded-xl text-white font-semibold active:scale-95 transition-transform ${confirmAction.type === 'delete' ? 'bg-red-500 shadow-lg shadow-red-200' : 'bg-orange-500 shadow-lg shadow-orange-200'
+                                    }`}
+                            >
+                                {confirmAction.type === 'delete' ? 'Sil' : 'İptal Et'}
+                            </button>
                         </div>
                     </div>
                 </div>
