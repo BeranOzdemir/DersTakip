@@ -808,6 +808,7 @@ function AppContent() {
     );
     if (activeTab === 'students') return <Students onNavigate={navigateTo} />;
     if (activeTab === 'schedule') return <Schedule showToast={showToast} onNavigate={navigateTo} />;
+    if (activeTab === 'resources') return <Resources showToast={showToast} />;
     if (activeTab === 'finance') return (
       <Finance
         showToast={showToast}
