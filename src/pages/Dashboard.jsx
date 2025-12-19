@@ -143,14 +143,26 @@ export default function Dashboard({ showToast }) {
     }, [upcomingLessons, notifiedLessons, students]);
 
     const handleLessonCardClick = (lesson) => {
-        if (!lesson) return;
+        if (!lesson) {
+            console.error('Lesson is null');
+            return;
+        }
 
         const student = students.find(s => s.id === lesson.studentId);
+        if (!student) {
+            console.error('Student not found for lesson:', lesson);
+            showToast('Öğrenci bilgisi bulunamadı!', 'error');
+            return;
+        }
+
+        console.log('Opening modal for lesson:', lesson, 'Student:', student);
         setSelectedLesson({ ...lesson, student });
 
         if (lesson.status === 'upcoming' || lesson.status === 'scheduled') {
+            console.log('Setting modal to attendance');
             setActiveLessonModal('attendance');
         } else if (lesson.status === 'started') {
+            console.log('Setting modal to details');
             setActiveLessonModal('details');
         }
     };
