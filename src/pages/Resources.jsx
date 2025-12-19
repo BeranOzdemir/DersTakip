@@ -34,9 +34,6 @@ export default function Resources({ showToast }) {
                 const snapshot = await uploadBytes(fileRef, file);
                 finalUrl = await getDownloadURL(snapshot.ref);
             } catch (error) {
-                setUploading(false);
-                return;
-            } catch (error) {
                 console.error("Upload failed", error);
 
                 let errorMsg = 'Dosya yüklenemedi. ';
