@@ -104,8 +104,8 @@ export default function Resources({ showToast }) {
                         key={f.id}
                         onClick={() => setFilterType(f.id)}
                         className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filterType === f.id
-                                ? 'bg-ios-blue text-white shadow-md'
-                                : 'bg-white text-gray-600 border border-gray-100'
+                            ? 'bg-ios-blue text-white shadow-md'
+                            : 'bg-white text-gray-600 border border-gray-100'
                             }`}
                     >
                         {f.label}
@@ -147,8 +147,8 @@ export default function Resources({ showToast }) {
                                 <button
                                     onClick={() => handleToggleStatus(resource.id)}
                                     className={`p-2 rounded-full transition-colors ${resource.status === 'completed'
-                                            ? 'text-green-500 bg-green-50'
-                                            : 'text-gray-300 hover:text-green-500 hover:bg-green-50'
+                                        ? 'text-green-500 bg-green-50'
+                                        : 'text-gray-300 hover:text-green-500 hover:bg-green-50'
                                         }`}
                                 >
                                     <CheckCircle size={20} />
@@ -167,7 +167,7 @@ export default function Resources({ showToast }) {
 
             {/* Add Modal */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in sm:p-4">
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in sm:p-4">
                     <div className="bg-white w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl p-6 shadow-2xl animate-slide-up">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold">Yeni Kaynak Ekle</h2>
@@ -194,8 +194,8 @@ export default function Resources({ showToast }) {
                                         key={t}
                                         onClick={() => setType(t)}
                                         className={`py-2 px-2 rounded-xl text-sm font-medium border transition-all flex flex-col items-center gap-1 ${type === t
-                                                ? 'border-ios-blue bg-blue-50 text-ios-blue'
-                                                : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                                            ? 'border-ios-blue bg-blue-50 text-ios-blue'
+                                            : 'border-gray-200 text-gray-500 hover:bg-gray-50'
                                             }`}
                                     >
                                         {getIcon(t)}
