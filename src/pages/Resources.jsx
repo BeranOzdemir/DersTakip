@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { storage } from '../lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-export default function Resources({ showToast }) {
+export default function Resources({ showToast, embedded = false }) {
     const { resources, students, setResources, activeInstitutionId } = useInstitution();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [filterType, setFilterType] = useState('all'); // all, book, pdf, link
@@ -119,11 +119,16 @@ export default function Resources({ showToast }) {
     return (
         <div className="pb-32 animate-fade-in relative min-h-screen">
             {/* Header */}
-            <div className="flex justify-between items-center mb-6 px-2">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Kaynaklar</h1>
-                    <p className="text-gray-500 text-sm">Materyal ve ödev takibi</p>
-                </div>
+            <div className={`flex justify-between items-center ${embedded ? 'mb-4' : 'mb-6'} px-2`}>
+                {!embedded && (
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">Kaynaklar</h1>
+                        <p className="text-gray-500 text-sm">Materyal ve ödev takibi</p>
+                    </div>
+                )}
+                {/* Spacer if embedded to push button to right if needed, though justify-between handles it if div is missing */}
+                {embedded && <div></div>}
+
                 <button
                     onClick={() => setIsAddModalOpen(true)}
                     className="bg-ios-blue text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"

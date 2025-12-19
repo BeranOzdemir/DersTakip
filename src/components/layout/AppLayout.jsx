@@ -7,7 +7,6 @@ export default function AppLayout({ children, activeTab, onTabChange, hideTabBar
         { id: 'dashboard', label: 'Özet', icon: Home },
         { id: 'students', label: 'Öğrenciler', icon: Users },
         { id: 'schedule', label: 'Program', icon: Calendar },
-        { id: 'resources', label: 'Kaynaklar', icon: Library },
         { id: 'finance', label: 'Finans', icon: Wallet },
         { id: 'settings', label: 'Ayarlar', icon: Settings },
     ];
