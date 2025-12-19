@@ -90,7 +90,27 @@ export default function Dashboard({ showToast }) {
 
 
 
-    const nextLesson = upcomingLessons[0];
+    const nextLesson = useMemo(() => {
+        const now = new Date();
+        return upcomingLessons.find(l => {
+            // 1. Skip if Cancelled or Absent
+            if (l.status === 'cancelled' || l.status === 'absent') return false;
+
+            // 2. Check 50-minute duration rule
+            const lessonDate = new Date(l.date);
+            const [hours, mins] = l.time.split(':');
+            lessonDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
+
+            const diffMins = differenceInMinutes(now, lessonDate);
+
+            // If lesson started more than 50 minutes ago, it's considered "expired" for the hero card
+            if (diffMins > 50) return false;
+
+            // Otherwise, it's a candidate (either upcoming, or currently active within 50 mins)
+            return true;
+        });
+    }, [upcomingLessons]);
+
     const nextLessonStudent = nextLesson ? students.find(s => s.id === nextLesson.studentId) : null;
 
     // Determine if the next lesson is actionable (starts within 10 mins or already started)
@@ -102,8 +122,8 @@ export default function Dashboard({ showToast }) {
             const lessonStart = parse(`${nextLesson.date} ${nextLesson.time}`, 'yyyy-MM-dd HH:mm', new Date());
             const diffMins = differenceInMinutes(lessonStart, new Date());
             // Active if within 10 mins before start, OR anytime after (until the day ends essentially)
-            // Changing strict -45 limit to allow very late starts (e.g. 5 hours late)
-            isNextLessonActionable = diffMins <= 10 && diffMins > -1440; // 24 hours window just in case
+            // But since we filter out > 50 mins above, this effectively creates a window: [Start-10m, Start+50m]
+            isNextLessonActionable = diffMins <= 10;
         }
     }
 
@@ -382,8 +402,12 @@ export default function Dashboard({ showToast }) {
                             {upcomingLessons.map(l => (
                                 <div
                                     key={l.id}
-                                    onClick={() => handleListItemClick(l)}
-                                    className="flex justify-between items-center border-l-[3px] border-ios-blue pl-3 py-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-r-lg"
+                                    onClick={() => {
+                                        if (l.status === 'cancelled' || l.status === 'absent') return;
+                                        handleListItemClick(l);
+                                    }}
+                                    className={`flex justify-between items-center border-l-[3px] border-ios-blue pl-3 py-3 hover:bg-gray-50 transition-colors rounded-r-lg ${(l.status === 'cancelled' || l.status === 'absent') ? 'cursor-default opacity-60' : 'cursor-pointer'
+                                        }`}
                                 >
                                     <div>
                                         <div className="font-medium text-[15px]">{l.time}</div>
