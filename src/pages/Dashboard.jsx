@@ -145,6 +145,7 @@ export default function Dashboard({ showToast }) {
     const handleLessonCardClick = (lesson) => {
         if (!lesson) {
             console.error('Lesson is null');
+            alert('Hata: Ders verisi boş!');
             return;
         }
 
@@ -152,11 +153,15 @@ export default function Dashboard({ showToast }) {
         if (!student) {
             console.error('Student not found for lesson:', lesson);
             showToast('Öğrenci bilgisi bulunamadı!', 'error');
+            alert('Hata: Öğrenci bilgisi bulunamadı!');
             return;
         }
 
         console.log('Opening modal for lesson:', lesson, 'Student:', student);
         setSelectedLesson({ ...lesson, student });
+
+        // Debugging Status
+        // alert(`Ders Tıklandı: ${lesson.status}`);
 
         if (lesson.status === 'upcoming' || lesson.status === 'scheduled') {
             console.log('Setting modal to attendance');
@@ -164,6 +169,19 @@ export default function Dashboard({ showToast }) {
         } else if (lesson.status === 'started') {
             console.log('Setting modal to details');
             setActiveLessonModal('details');
+        } else {
+            // Handle unhandled statuses
+            console.warn('Unhandled lesson status:', lesson.status);
+            alert(`İşlem yapılamıyor. Ders durumu: ${lesson.status}`);
+
+            if (lesson.status === 'cancelled') {
+                // Maybe allow re-scheduling or un-cancelling?
+                // For now just show details or cancel confirm to allow "undo"?
+                // Let's show details for now as a fallback? 
+                // Or better, show cancel_confirm so they can see it's cancelled?
+                // Actually, if it's cancelled, maybe we shouldn't show "Yoklama Al" button in UI.
+                // But since we are here:
+            }
         }
     };
 
