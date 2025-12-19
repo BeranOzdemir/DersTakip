@@ -101,8 +101,9 @@ export default function Dashboard({ showToast }) {
         } else {
             const lessonStart = parse(`${nextLesson.date} ${nextLesson.time}`, 'yyyy-MM-dd HH:mm', new Date());
             const diffMins = differenceInMinutes(lessonStart, new Date());
-            // Active if within 10 mins before start, OR up to 45 mins late (user might remain late)
-            isNextLessonActionable = diffMins <= 10 && diffMins > -45;
+            // Active if within 10 mins before start, OR anytime after (until the day ends essentially)
+            // Changing strict -45 limit to allow very late starts (e.g. 5 hours late)
+            isNextLessonActionable = diffMins <= 10 && diffMins > -1440; // 24 hours window just in case
         }
     }
 
