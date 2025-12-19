@@ -144,20 +144,40 @@ export default function Dashboard({ showToast }) {
     }, [upcomingLessons, notifiedLessons, students]);
 
     const handleLessonCardClick = (lesson) => {
-        if (!lesson) return;
+        try {
+            if (!lesson) {
+                console.warn('handleLessonCardClick: Lesson is null');
+                return;
+            }
 
-        const student = students.find(s => s.id === lesson.studentId);
-        if (!student) {
-            showToast('Öğrenci bilgisi bulunamadı!', 'error');
-            return;
-        }
+            console.log('handleLessonCardClick triggered for:', lesson);
 
-        setSelectedLesson({ ...lesson, student });
+            // Guard against missing students array
+            if (!Array.isArray(students)) {
+                console.error('handleLessonCardClick: students is not an array', students);
+                if (typeof showToast === 'function') showToast('Sistem hatası: Öğrenci listesi yüklenemedi.', 'error');
+                return;
+            }
 
-        if (lesson.status === 'upcoming' || lesson.status === 'scheduled') {
-            setActiveLessonModal('attendance');
-        } else if (lesson.status === 'started') {
-            setActiveLessonModal('details');
+            const student = students.find(s => s.id === lesson.studentId);
+            if (!student) {
+                console.warn('handleLessonCardClick: Student not found for id', lesson.studentId);
+                if (typeof showToast === 'function') showToast('Öğrenci bilgisi bulunamadı!', 'error');
+                return;
+            }
+
+            setSelectedLesson({ ...lesson, student });
+
+            if (lesson.status === 'upcoming' || lesson.status === 'scheduled') {
+                setActiveLessonModal('attendance');
+            } else if (lesson.status === 'started') {
+                setActiveLessonModal('details');
+            } else {
+                console.log('handleLessonCardClick: Lesson status is', lesson.status);
+            }
+        } catch (error) {
+            console.error('handleLessonCardClick Error:', error);
+            if (typeof showToast === 'function') showToast('Bir hata oluştu: ' + error.message, 'error');
         }
     };
 
@@ -270,7 +290,7 @@ export default function Dashboard({ showToast }) {
         <div className="pb-20 relative pt-2">
             <div className="flex justify-between items-start mb-6">
                 <div>
-                    <h1 className="text-[34px] font-bold tracking-tight">{activeInstitution?.name || 'Özet'}</h1>
+                    <h1 className="text-[34px] font-bold tracking-tight">{activeInstitution?.name || 'Özet'} <span className="text-xs text-stone-300 font-normal align-top">v1.2</span></h1>
                     <p className="text-ios-subtext text-lg capitalize">{today}</p>
                 </div>
                 <button
