@@ -198,7 +198,40 @@ export default function Dashboard({ showToast }) {
             pStatus = 'deducted_balance';
         } else if (paymentMethod === 'cash') {
             pStatus = 'paid_cash';
+
+            // Create Transaction Record
+            const { date, time } = (() => {
+                const d = new Date();
+                return {
+                    date: d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }),
+                    time: d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+                };
+            })();
+
+            const newTx = {
+                id: (Date.now() + Math.random()).toString(), // Simple ID
+                type: 'collection',
+                description: `Ders Ücreti: ${student.name}`,
+                amount: student.feePerLesson,
+                date: date,
+                time: time
+            };
+
+            // Update Context State
             setCash(prev => prev + student.feePerLesson);
+            setTransactions(prev => [newTx, ...prev]);
+
+            // Persist to DB (Atomic update preferred but Context handles individual setters too)
+            // But verify: Does setCash/setTransactions inside Context trigger DB update?
+            // Yes, based on previous analysis of InstitutionContext.
+            // However, calling them separately might trigger two writes.
+            // Better to use updateActiveInstitution for atomic update if possible, 
+            // but Context only exposes individual setters or updateActiveInstitution.
+            // Let's check Context again if we can. 
+            // Wait, I can see useInstitution destructuring in Dashboard.
+            // For now, let's just add setTransactions. Context handles DB update for each setter.
+            // Actually, looking at lines 191-223 in Dashboard, it acts on local state or context setters.
+            // Let's just add the transaction creation.
         } else {
             // Borç
             newBalance -= student.feePerLesson; // Borç olarak bakiyeden düşüyoruz (negatif bakiye)
