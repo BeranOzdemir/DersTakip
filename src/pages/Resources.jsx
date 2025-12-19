@@ -234,8 +234,8 @@ export default function Resources({ showToast, embedded = false }) {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-4 gap-2">
-                                {['book', 'pdf', 'image', 'link'].map(t => (
+                            <div className="grid grid-cols-2 gap-2">
+                                {['book', 'link'].map(t => (
                                     <button
                                         key={t}
                                         onClick={() => setType(t)}
@@ -246,38 +246,13 @@ export default function Resources({ showToast, embedded = false }) {
                                     >
                                         {getIcon(t)}
                                         <span className="capitalize truncate w-full text-center">
-                                            {t === 'book' ? 'Kitap' : t === 'image' ? 'Resim' : t}
+                                            {t === 'book' ? 'Kitap' : t === 'image' ? 'Resim' : 'Link'}
                                         </span>
                                     </button>
                                 ))}
                             </div>
 
-                            {(type === 'pdf' || type === 'image') && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Dosya Yükle</label>
-                                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors relative cursor-pointer">
-                                        <input
-                                            type="file"
-                                            accept={type === 'image' ? "image/*" : ".pdf,.doc,.docx"}
-                                            onChange={(e) => setFile(e.target.files[0])}
-                                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                                        />
-                                        <div className="flex flex-col items-center gap-2 text-gray-500">
-                                            {file ? (
-                                                <>
-                                                    <CheckCircle className="text-green-500" />
-                                                    <span className="text-sm text-gray-900 font-medium truncate w-full px-4">{file.name}</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Upload />
-                                                    <span className="text-sm">Dosya seçmek için dokunun</span>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+
 
                             {type === 'link' && (
                                 <div>
