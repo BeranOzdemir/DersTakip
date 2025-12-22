@@ -160,7 +160,6 @@ export default function Tuner({ showToast }) {
         <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 animate-fade-in">
             <div className="mb-10 text-center">
                 <h1 className="text-3xl font-bold text-gray-800 mb-2">Akort Aleti</h1>
-                <p className="text-gray-500">Gitarınızı kolayca akort edin</p>
             </div>
 
             {/* Meter Display */}
@@ -201,8 +200,8 @@ export default function Tuner({ showToast }) {
             <button
                 onClick={isListening ? stopListening : startListening}
                 className={`w-20 h-20 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all outline-none ring-4 ring-offset-2 ${isListening
-                        ? 'bg-red-50 text-red-500 ring-red-100'
-                        : 'bg-ios-blue text-white ring-blue-100'
+                    ? 'bg-red-50 text-red-500 ring-red-100'
+                    : 'bg-ios-blue text-white ring-blue-100'
                     }`}
             >
                 {isListening ? <MicOff size={32} /> : <Mic size={32} />}
