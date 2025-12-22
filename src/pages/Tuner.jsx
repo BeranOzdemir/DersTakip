@@ -98,20 +98,7 @@ export default function Tuner({ showToast }) {
     const startListening = async () => {
         try {
             audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-
-            // Mobile browsers require explicit resume() on user gesture
-            if (audioContextRef.current.state === 'suspended') {
-                await audioContextRef.current.resume();
-            }
-
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    echoCancellation: false,
-                    noiseSuppression: false,
-                    autoGainControl: false,
-                    latency: 0
-                }
-            });
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
             analyserRef.current = audioContextRef.current.createAnalyser();
             analyserRef.current.fftSize = 2048;
@@ -213,8 +200,8 @@ export default function Tuner({ showToast }) {
             <button
                 onClick={isListening ? stopListening : startListening}
                 className={`w-20 h-20 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all outline-none ring-4 ring-offset-2 ${isListening
-                    ? 'bg-red-50 text-red-500 ring-red-100'
-                    : 'bg-ios-blue text-white ring-blue-100'
+                        ? 'bg-red-50 text-red-500 ring-red-100'
+                        : 'bg-ios-blue text-white ring-blue-100'
                     }`}
             >
                 {isListening ? <MicOff size={32} /> : <Mic size={32} />}
