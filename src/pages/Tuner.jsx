@@ -98,7 +98,20 @@ export default function Tuner({ showToast }) {
     const startListening = async () => {
         try {
             audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            // Mobile browsers require explicit resume() on user gesture
+            if (audioContextRef.current.state === 'suspended') {
+                await audioContextRef.current.resume();
+            }
+
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    autoGainControl: false,
+                    latency: 0
+                }
+            });
 
             analyserRef.current = audioContextRef.current.createAnalyser();
             analyserRef.current.fftSize = 2048;
