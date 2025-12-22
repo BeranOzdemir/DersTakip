@@ -160,6 +160,7 @@ export default function Tuner({ showToast }) {
         <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 animate-fade-in">
             <div className="mb-10 text-center">
                 <h1 className="text-3xl font-bold text-gray-800 mb-2">Akort Aleti</h1>
+                <p className="text-gray-500">Gitarınızı kolayca akort edin</p>
             </div>
 
             {/* Meter Display */}
