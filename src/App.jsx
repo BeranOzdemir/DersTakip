@@ -16,6 +16,7 @@ const Resources = lazy(() => import('./pages/Resources'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Login = lazy(() => import('./pages/Login'));
 const Settings = lazy(() => import('./pages/Settings'));
+const Tuner = lazy(() => import('./pages/Tuner'));
 const InstitutionSelector = lazy(() => import('./pages/InstitutionSelector'));
 const ProfileSetup = lazy(() => import('./pages/ProfileSetup'));
 // Skeleton Components
@@ -808,6 +809,7 @@ function AppContent() {
     );
     if (activeTab === 'students') return <Students onNavigate={navigateTo} showToast={showToast} />;
     if (activeTab === 'schedule') return <Schedule showToast={showToast} onNavigate={navigateTo} />;
+    if (activeTab === 'tuner') return <Tuner showToast={showToast} />;
     if (activeTab === 'finance') return (
       <Finance
         showToast={showToast}

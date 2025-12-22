@@ -1,5 +1,4 @@
-import React from 'react';
-import { Home, Users, Calendar, Wallet, Settings, Library } from 'lucide-react';
+import { Home, Users, Calendar, Wallet, Settings, Music } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export default function AppLayout({ children, activeTab, onTabChange, hideTabBar }) {
@@ -7,6 +6,7 @@ export default function AppLayout({ children, activeTab, onTabChange, hideTabBar
         { id: 'dashboard', label: 'Özet', icon: Home },
         { id: 'students', label: 'Öğrenciler', icon: Users },
         { id: 'schedule', label: 'Program', icon: Calendar },
+        { id: 'tuner', label: 'Akort', icon: Music },
         { id: 'finance', label: 'Finans', icon: Wallet },
         { id: 'settings', label: 'Ayarlar', icon: Settings },
     ];
