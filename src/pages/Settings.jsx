@@ -5,7 +5,7 @@ import { useInstitution } from '../contexts/InstitutionContext';
 
 export default function Settings({ showToast, onPhotoUpload }) {
     const { user, setUser, handleLogout: onLogout, handleDeleteAccount } = useAuth();
-    const { institutions, activeInstitution, addInstitution, updateInstitution, deleteInstitution, switchInstitution, handleResetActiveInstitution: onResetActiveInstitution } = useInstitution();
+    const { institutions, activeInstitution, addInstitution, updateInstitution, deleteInstitution, switchInstitution, handleResetActiveInstitution: onResetActiveInstitution, updateActiveInstitution } = useInstitution();
 
     const fileInputRef = useRef(null);
 
@@ -46,9 +46,29 @@ export default function Settings({ showToast, onPhotoUpload }) {
             // In real app we would return here. 
             // But for demo let's allow it or just fake success
         }
-
         showToast('Şifreniz başarıyla değiştirildi.');
         setModalType(null);
+    };
+
+    const handleVerifyBalance = () => {
+        if (!activeInstitution) return;
+
+        const transactions = activeInstitution.transactions || [];
+        const calculatedCash = transactions.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+        const currentCash = activeInstitution.cash || 0;
+
+        const diff = currentCash - calculatedCash;
+
+        if (diff !== 0) {
+            if (window.confirm(`Kasa bakiyesinde tutarsızlık tespit edildi.\n\nMevcut: ${currentCash}₺\nHesaplanan: ${calculatedCash}₺\nFark: ${diff}₺\n\nBakiye, işlem geçmişine göre düzeltilsin mi?`)) {
+                updateActiveInstitution({
+                    cash: calculatedCash
+                });
+                showToast(`Kasa bakiyesi düzeltildi. (Yeni bakiye: ${calculatedCash}₺)`);
+            }
+        } else {
+            showToast('Kasa bakiyesi ve işlem geçmişi tutarlı. (Sorun yok)');
+        }
     };
 
     return (
@@ -261,6 +281,21 @@ export default function Settings({ showToast, onPhotoUpload }) {
                     Hesabı Sil
                 </button>
             </div>
+
+            {/* Debug / Fix Tools */}
+            {activeInstitution && (
+                <>
+                    <h2 className="text-ios-subtext uppercase text-[13px] mb-2 ml-8">SORUN GİDERME</h2>
+                    <div className="px-4 mb-6">
+                        <button
+                            onClick={handleVerifyBalance}
+                            className="w-full bg-white text-ios-blue py-3.5 rounded-xl font-semibold shadow-ios active:scale-95 transition-transform text-[17px] border border-blue-100"
+                        >
+                            Kasa Bakiyesini Doğrula / Onar
+                        </button>
+                    </div>
+                </>
+            )}
 
             <div className="mt-10 text-center text-xs text-gray-400">
                 v1.0.0 • by Beran Özdemir
